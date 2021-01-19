@@ -6,9 +6,11 @@ import com.epam.esm.dao.TagDao;
 import com.epam.esm.dao.impl.GiftDaoImpl;
 import com.epam.esm.dao.impl.GiftTagDaoImpl;
 import com.epam.esm.dao.impl.TagDaoImpl;
+import com.epam.esm.model.CustomSearchRequest;
 import com.epam.esm.model.dto.GiftCertificateDto;
 import com.epam.esm.model.entity.GiftCertificateEntity;
 import com.epam.esm.service.GiftService;
+import com.epam.esm.util.SearchConstants;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,8 +24,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class GiftServiceImplTest {
@@ -72,11 +73,12 @@ class GiftServiceImplTest {
     void getAllGifts() {
         when(giftDao.findAllGifts()).thenReturn(giftCertificateEntityList);
 
-
         List<GiftCertificateDto> allGifts = giftService.getAllGifts();
 
         assertEquals(5, allGifts.size());
-        //check all fields
+        for(GiftCertificateDto giftCertificateDto : allGifts){
+            assertTrue(giftCertificateDto.getName().contains("name"));
+        }
     }
 
     @Test
@@ -89,85 +91,21 @@ class GiftServiceImplTest {
         assertEquals("name1", giftById.getName());
     }
 
-//    @Test
-//    void searchGiftsByName() {
-//        CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
-//                .name("name").build();
-//
-//        when(giftDao.findAndSortGift(any(CustomSearchRequest.class))).thenReturn(giftCertificateEntityList);
-//
-//        List<GiftCertificateDto> giftCertificateDtoList = giftService.searchGifts(customSearchRequest);
-//
-//        assertEquals(5, giftCertificateDtoList.size());
-//
-//        assertAll(
-//                () -> assertEquals(5, giftCertificateDtoList.size()),
-//                () -> assertTrue(giftCertificateDtoList.get(0).getName().contains("name")),
-//                () -> assertTrue(giftCertificateDtoList.get(1).getName().contains("name")),
-//                () -> assertTrue(giftCertificateDtoList.get(2).getName().contains("name")),
-//                () -> assertTrue(giftCertificateDtoList.get(3).getName().contains("name")),
-//                () -> assertTrue(giftCertificateDtoList.get(4).getName().contains("name")));
-//    }
-//
-//    @Test
-//    void searchGiftsByPrice() {
-//        int priceFrom = 1;
-//        int priceTo = 5;
-//
-//        CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
-//                .priceFrom(priceFrom)
-//                .priceTo(priceTo).build();
-//
-//        when(giftDao.findGiftByPrice(any(CustomSearchRequest.class))).thenReturn(giftCertificateEntityList);
-//
-//        List<GiftCertificateDto> giftCertificateDtoList = giftService.searchGifts(customSearchRequest);
-//
-//        assertEquals(5, giftCertificateDtoList.size());
-//
-//        assertAll(
-//                () -> assertEquals(5, giftCertificateDtoList.size()),
-//                () -> assertTrue(giftCertificateDtoList.get(0).getPrice() >= priceFrom
-//                        && giftCertificateDtoList.get(0).getPrice() <= priceTo),
-//                () -> assertTrue(giftCertificateDtoList.get(1).getPrice() >= priceFrom
-//                        && giftCertificateDtoList.get(1).getPrice() <= priceTo),
-//                () -> assertTrue(giftCertificateDtoList.get(2).getPrice() >= priceFrom
-//                        && giftCertificateDtoList.get(2).getPrice() <= priceTo),
-//                () -> assertTrue(giftCertificateDtoList.get(3).getPrice() >= priceFrom
-//                        && giftCertificateDtoList.get(3).getPrice() <= priceTo),
-//                () -> assertTrue(giftCertificateDtoList.get(4).getPrice() >= priceFrom
-//                        && giftCertificateDtoList.get(4).getPrice() <= priceTo)
-//                );
-//    }
-//
-//    @Test
-//    void searchGiftsByDuration() {
-//        int durationFrom = 1;
-//        int durationTo = 5;
-//
-//        CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
-//                .durationFrom(durationFrom)
-//                .durationTo(durationTo).build();
-//
-//        when(giftDao.findGiftByDuration(any(CustomSearchRequest.class))).thenReturn(giftCertificateEntityList);
-//
-//        List<GiftCertificateDto> giftCertificateDtoList = giftService.searchGifts(customSearchRequest);
-//
-//        assertEquals(5, giftCertificateDtoList.size());
-//
-//        assertAll(
-//                () -> assertEquals(5, giftCertificateDtoList.size()),
-//                () -> assertTrue(giftCertificateDtoList.get(0).getDuration() >= durationFrom
-//                        && giftCertificateDtoList.get(0).getDuration() <= durationTo),
-//                () -> assertTrue(giftCertificateDtoList.get(1).getDuration() >= durationFrom
-//                        && giftCertificateDtoList.get(1).getDuration() <= durationTo),
-//                () -> assertTrue(giftCertificateDtoList.get(2).getDuration() >= durationFrom
-//                        && giftCertificateDtoList.get(2).getDuration() <= durationTo),
-//                () -> assertTrue(giftCertificateDtoList.get(3).getDuration() >= durationFrom
-//                        && giftCertificateDtoList.get(3).getDuration() <= durationTo),
-//                () -> assertTrue(giftCertificateDtoList.get(4).getDuration() >= durationFrom
-//                        && giftCertificateDtoList.get(4).getDuration() <= durationTo)
-//        );
-//    }
+    @Test
+    void searchGiftTest(){
+        when(giftDao.findAndSortGift(any(CustomSearchRequest.class))).thenReturn(giftCertificateEntityList);
+
+        CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
+                .tagNamePrefix("name1")
+                .namePrefix("name1")
+                .descriptionPrefix("description1")
+                .sortField(SearchConstants.NAME_FIELD)
+                .sortMethod(SearchConstants.DESC_METHOD_SORT).build();
+
+        List<GiftCertificateDto> giftCertificateDtoList = giftService.searchGifts(customSearchRequest);
+
+        assertNotNull(giftCertificateDtoList);
+    }
 
     @Test
     void createGift() {
@@ -197,5 +135,14 @@ class GiftServiceImplTest {
                 .duration(1).build());
 
         assertEquals("description1", giftCertificateDto.getDescription());
+    }
+
+    @Test
+    void deleteGift(){
+        Long id = 1L;
+
+        giftService.deleteGiftById(id);
+
+        verify(giftDao, times(1)).deleteGiftById(anyLong());
     }
 }

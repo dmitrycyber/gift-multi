@@ -1,13 +1,18 @@
 package com.epam.esm.dao.impl;
 
 import com.epam.esm.dao.exception.GiftNotFoundException;
+import com.epam.esm.model.CustomSearchRequest;
 import com.epam.esm.model.entity.GiftCertificateEntity;
+import com.epam.esm.model.entity.TagEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import javax.sql.DataSource;
+
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -32,13 +37,9 @@ public class GiftDaoImplTest {
 
     @Test
     public void findAllGifts() {
-        String s = "1" + null + "2";
-        System.out.println(s);
-
-
-//        List<GiftCertificateEntity> allGifts = giftDao.findAllGifts();
-//        assertNotNull(allGifts);
-//        assertEquals(5, allGifts.size());
+        List<GiftCertificateEntity> allGifts = giftDao.findAllGifts();
+        assertNotNull(allGifts);
+        assertEquals(5, allGifts.size());
     }
 
     @Test
@@ -55,61 +56,86 @@ public class GiftDaoImplTest {
         assertEquals(expectedEntity, actualEntity);
     }
 
-//    @Test
-//    public void successfulFindGiftByName() {
-//        String expectedName = "name";
-//
-//        CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
-//                .name(expectedName).build();
-//
-//        List<GiftCertificateEntity> giftByName = giftDao.findAndSortGift(customSearchRequest);
-//        assertTrue(giftByName.size() > 0);
-//
-//        for (GiftCertificateEntity entity : giftByName) {
-//            assertTrue(entity.getName().contains(expectedName));
-//        }
-//    }
-//
-//    @Test
-//    public void negativeFindGiftByName() {
-//        String expectedName = "qwe";
-//
-//        CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
-//                .name(expectedName).build();
-//
-//        List<GiftCertificateEntity> giftByName = giftDao.findAndSortGift(customSearchRequest);
-//        assertEquals(0, giftByName.size());
-//    }
+    @Test
+    public void findAndSortGiftByName(){
+        String namePrefix = "1";
 
-//    @Test
-//    public void findGiftByPrice() {
-//        Integer priceFrom = 10;
-//        Integer priceTo = 20;
-//
-//
-//        CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
-//                .priceFrom(priceFrom)
-//                .priceTo(priceTo).build();
-//
-//        List<GiftCertificateEntity> giftByPrice = giftDao.findGiftByPrice(customSearchRequest);
-//        assertNotNull(giftByPrice);
-//        assertEquals(2, giftByPrice.size());
-//    }
-//
-//    @Test
-//    public void findGiftByDuration() {
-//        Integer durationFrom = 10;
-//        Integer durationTo = 20;
-//
-//
-//        CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
-//                .durationFrom(durationFrom)
-//                .durationTo(durationTo).build();
-//
-//        List<GiftCertificateEntity> giftByDuration = giftDao.findGiftByDuration(customSearchRequest);
-//        assertNotNull(giftByDuration);
-//        assertEquals(2, giftByDuration.size());
-//    }
+        CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
+                .namePrefix(namePrefix).build();
+
+        List<GiftCertificateEntity> resultList = giftDao.findAndSortGift(customSearchRequest);
+
+        assertNotNull(resultList);
+
+        for(GiftCertificateEntity giftCertificateEntity : resultList) {
+            assertTrue(giftCertificateEntity.getName().contains(namePrefix));
+        }
+    }
+
+    @Test
+    public void findAndSortGiftByDescription(){
+        String descriptionPrefix = "1";
+
+        CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
+                .descriptionPrefix(descriptionPrefix).build();
+
+        List<GiftCertificateEntity> resultList = giftDao.findAndSortGift(customSearchRequest);
+
+        assertNotNull(resultList);
+
+        for(GiftCertificateEntity giftCertificateEntity : resultList) {
+            assertTrue(giftCertificateEntity.getDescription().contains(descriptionPrefix));
+        }
+    }
+
+    @Test
+    public void findAndSortGiftByTagName(){
+        String tagNamePrefix = "name1";
+
+        CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
+                .tagNamePrefix(tagNamePrefix).build();
+
+        List<GiftCertificateEntity> resultList = giftDao.findAndSortGift(customSearchRequest);
+
+        assertNotNull(resultList);
+
+        for(GiftCertificateEntity giftCertificateEntity : resultList) {
+            Set<TagEntity> tags = giftCertificateEntity.getTags();
+            assertEquals(2, tags.size());
+        }
+    }
+
+    @Test
+    public void findAndSortGiftByGiftNameAndDescription(){
+        String namePrefix = "1";
+        String descriptionPrefix = "1";
+
+        CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
+                .namePrefix(namePrefix)
+                .descriptionPrefix(descriptionPrefix).build();
+
+        List<GiftCertificateEntity> resultList = giftDao.findAndSortGift(customSearchRequest);
+
+        assertNotNull(resultList);
+        assertEquals(1, resultList.size());
+    }
+
+    @Test
+    public void findAndSortGiftByGiftNameAndDescriptionAndTagName(){
+        String namePrefix = "2";
+        String descriptionPrefix = "2";
+        String tagNamePrefix = "name3";
+
+        CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
+                .namePrefix(namePrefix)
+                .descriptionPrefix(descriptionPrefix)
+                .tagNamePrefix(tagNamePrefix).build();
+
+        List<GiftCertificateEntity> resultList = giftDao.findAndSortGift(customSearchRequest);
+
+        assertNotNull(resultList);
+        assertEquals(1, resultList.size());
+    }
 
     @Test
     public void createGiftWithoutTags() {

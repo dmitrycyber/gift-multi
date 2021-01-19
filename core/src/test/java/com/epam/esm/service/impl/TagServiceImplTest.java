@@ -42,6 +42,9 @@ class TagServiceImplTest {
         List<TagDto> allTags = tagService.getAllTags();
 
         assertEquals(3, allTags.size());
+        for(TagDto tagDto : allTags){
+            assertTrue(tagDto.getName().contains("name"));
+        }
     }
 
     @Test
@@ -107,5 +110,14 @@ class TagServiceImplTest {
         assertEquals(1L, tagDto.getId());
         assertEquals("name", tagDto.getName());
 
+    }
+
+    @Test
+    void deleteGift(){
+        Long id = 1L;
+
+        tagService.deleteTagById(id);
+
+        verify(tagDao, times(1)).deleteTagById(anyLong());
     }
 }

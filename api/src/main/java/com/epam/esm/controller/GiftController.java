@@ -43,12 +43,7 @@ public class GiftController {
                 .sortMethod(sortMethod)
                 .tagNamePrefix(tagNamePrefix).build();
 
-        if (!customSearchRequest.equals(defaultCustomSearchRequest)){
-            allGifts = giftService.searchGifts(customSearchRequest);
-        }
-        else {
-            allGifts = giftService.getAllGifts();
-        }
+        allGifts = !customSearchRequest.equals(defaultCustomSearchRequest) ? giftService.searchGifts(customSearchRequest) : giftService.getAllGifts();
 
         return ResponseEntity.ok(allGifts);
     }
