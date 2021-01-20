@@ -37,4 +37,6 @@ dependencies {
     compile group: 'io.swagger.core.v3', name: 'swagger-models', version: '2.1.2'
     compile group: 'io.springfox', name: 'springfox-swagger2', version: '2.9.2'
     compile group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.9.2'
+
+
 }

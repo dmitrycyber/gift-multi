@@ -8,15 +8,15 @@ public enum Status {
 
     DEFAULT(1099, "Something wrong, try later");
 
-    private int code;
+    private Integer code;
     private String message;
 
-    Status(int code, String message) {
+    Status(Integer code, String message) {
         this.code = code;
         this.message = message;
     }
 
-    public int getCode() {
+    public Integer getCode() {
         return code;
     }
 
