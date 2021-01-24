@@ -2,6 +2,7 @@ package com.epam.esm.dao.impl;
 
 import com.epam.esm.dao.exception.TagNotFoundException;
 import com.epam.esm.model.entity.TagEntity;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -9,8 +10,6 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import javax.sql.DataSource;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class TagDaoImplTest {
     private DataSource dataSource;
@@ -32,8 +31,14 @@ public class TagDaoImplTest {
     @Test
     public void testFindAllTags() {
         List<TagEntity> allTags = tagDao.findAllTags();
-        assertNotNull(allTags);
-        assertEquals(5, allTags.size());
+        Assertions.assertNotNull(allTags);
+        Assertions.assertEquals(5, allTags.size());
+
+        allTags
+                .forEach(tagEntity -> {
+                    Assertions.assertTrue(tagEntity.getName().contains("name"));
+                    Assertions.assertNotNull(tagEntity.getId());
+                });
     }
 
     @Test
@@ -44,7 +49,7 @@ public class TagDaoImplTest {
 
         TagEntity actualEntity = tagDao.findTagById(1L);
 
-        assertEquals(expectedEntity, actualEntity);
+        Assertions.assertEquals(expectedEntity, actualEntity);
     }
 
     @Test
@@ -53,7 +58,8 @@ public class TagDaoImplTest {
 
         List<TagEntity> tagByName = tagDao.findTagByName(expectedName);
         int size = tagByName.size();
-        assertEquals(1, size);
+        Assertions.assertEquals(1, size);
+        Assertions.assertEquals(expectedName, tagByName.get(0).getName());
     }
 
     @Test
@@ -61,7 +67,7 @@ public class TagDaoImplTest {
         String expectedName = "name12";
         List<TagEntity> tagByName = tagDao.findTagByName(expectedName);
         int size = tagByName.size();
-        assertEquals(0, size);
+        Assertions.assertEquals(0, size);
     }
 
 
@@ -71,7 +77,11 @@ public class TagDaoImplTest {
 
         List<TagEntity> tagByName = tagDao.findTagByPartName(expectedName);
         int size = tagByName.size();
-        assertEquals(5, size);
+        Assertions.assertEquals(5, size);
+        tagByName
+                .forEach(tagEntity -> {
+                    Assertions.assertTrue(tagEntity.getName().contains(expectedName));
+                });
     }
 
     @Test
@@ -80,30 +90,34 @@ public class TagDaoImplTest {
 
         List<TagEntity> tagByName = tagDao.findTagByPartName(expectedName);
         int size = tagByName.size();
-        assertEquals(0, size);
+        Assertions.assertEquals(0, size);
     }
 
 
     @Test
     public void testCreateTag() {
+        String createdTagName = "testName";
+
         TagEntity entityToSave = TagEntity.builder()
-                .name("testName").build();
+                .name(createdTagName).build();
 
         TagEntity savedEntity = tagDao.createTag(entityToSave);
-        assertNotNull(savedEntity);
-        assertEquals(6, tagDao.findAllTags().size());
-    }
+        Assertions.assertNotNull(savedEntity);
+        Assertions.assertEquals(6, tagDao.findAllTags().size());
 
+        Assertions.assertEquals(createdTagName, savedEntity.getName());
+
+    }
 
     @Test
     public void testDeleteTagById() {
         tagDao.deleteTagById(1L);
 
-        assertEquals(4, tagDao.findAllTags().size());
+        Assertions.assertEquals(4, tagDao.findAllTags().size());
     }
 
     @Test
     public void giftNotFoundExceptionCheck(){
-        assertThrows(TagNotFoundException.class, () -> tagDao.findTagById(6L));
+        Assertions.assertThrows(TagNotFoundException.class, () -> tagDao.findTagById(6L));
     }
 }

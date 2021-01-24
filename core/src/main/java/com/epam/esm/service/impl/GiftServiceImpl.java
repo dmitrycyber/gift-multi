@@ -12,14 +12,13 @@ import com.epam.esm.service.GiftService;
 import com.epam.esm.util.converter.EntityConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Component
+@Service
 public class GiftServiceImpl implements GiftService {
     private final GiftDao giftDao;
     private final TagDao tagDao;
@@ -32,35 +31,34 @@ public class GiftServiceImpl implements GiftService {
         this.giftTagDao = giftTagDao;
     }
 
-
     @Override
+    @Transactional
     public List<GiftCertificateDto> getAllGifts(){
         List<GiftCertificateDto> giftCertificateDtoList = giftDao.findAllGifts().stream()
-                .map(EntityConverter::convertGiftEntityDto)
+                .map(EntityConverter::convertGiftEntityToDto)
                 .collect(Collectors.toList());
-
         return giftCertificateDtoList;
     }
 
     @Override
+    @Transactional
     public GiftCertificateDto getGiftById(Long giftId) {
-        return EntityConverter.convertGiftEntityDto(giftDao.findGiftById(giftId));
+        return EntityConverter.convertGiftEntityToDto(giftDao.findGiftById(giftId));
     }
 
     @Override
+    @Transactional
     public List<GiftCertificateDto> searchGifts(CustomSearchRequest customSearchRequest) {
-        List<GiftCertificateEntity> giftList = giftDao.findAndSortGift(customSearchRequest);
-
+        List<GiftCertificateEntity> giftList = giftDao.findAndSortGifts(customSearchRequest);
         return giftList.stream()
-                .map(EntityConverter::convertGiftEntityDto)
+                .map(EntityConverter::convertGiftEntityToDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public GiftCertificateDto createGift(GiftCertificateDto giftCertificateDto) {
-
-        GiftCertificateEntity giftEntity = giftDao.createGift(EntityConverter.convertGiftDtoEntity(giftCertificateDto));
+        GiftCertificateEntity giftEntity = giftDao.createGift(EntityConverter.convertGiftDtoToEntity(giftCertificateDto));
 
         Set<TagEntity> tags = giftEntity.getTags();
         if (tags != null){
@@ -71,20 +69,20 @@ public class GiftServiceImpl implements GiftService {
 
                 GiftTagEntity giftTagEntity = GiftTagEntity.builder()
                         .giftId(giftEntity.getId())
-                        .tagId(tagEntity.getId()).build();
+                        .tagId(tagEntity.getId())
+                        .build();
 
-                giftTagDao.insertNewGiftTagEntity(giftTagEntity);
+                giftTagDao.saveGiftTag(giftTagEntity);
             }
         }
-
-        return EntityConverter.convertGiftEntityDto(giftEntity);
+        return EntityConverter.convertGiftEntityToDto(giftEntity);
     }
 
     @Override
+    @Transactional
     public GiftCertificateDto updateGift(GiftCertificateDto giftCertificateDto) {
-        GiftCertificateEntity entity = giftDao.updateGift(EntityConverter.convertGiftDtoEntity(giftCertificateDto));
-
-        return EntityConverter.convertGiftEntityDto(entity);
+        GiftCertificateEntity entity = giftDao.updateGift(EntityConverter.convertGiftDtoToEntity(giftCertificateDto));
+        return EntityConverter.convertGiftEntityToDto(entity);
     }
 
     @Override

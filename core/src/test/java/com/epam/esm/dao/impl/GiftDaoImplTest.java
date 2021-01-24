@@ -4,18 +4,17 @@ import com.epam.esm.dao.exception.GiftNotFoundException;
 import com.epam.esm.model.CustomSearchRequest;
 import com.epam.esm.model.entity.GiftCertificateEntity;
 import com.epam.esm.model.entity.TagEntity;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import javax.sql.DataSource;
-
+import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 
 public class GiftDaoImplTest {
     private DataSource dataSource;
@@ -38,75 +37,94 @@ public class GiftDaoImplTest {
     @Test
     public void findAllGifts() {
         List<GiftCertificateEntity> allGifts = giftDao.findAllGifts();
-        assertNotNull(allGifts);
-        assertEquals(5, allGifts.size());
+        Assertions.assertNotNull(allGifts);
+        Assertions.assertEquals(5, allGifts.size());
+        allGifts
+                .forEach(giftCertificateEntity -> {
+                    Assertions.assertTrue(giftCertificateEntity.getName().contains("name"));
+                    Assertions.assertTrue(giftCertificateEntity.getDescription().contains("description"));
+                    Assertions.assertNotNull(giftCertificateEntity.getId());
+                    Assertions.assertNull(giftCertificateEntity.getCreateDate());
+                    Assertions.assertNull(giftCertificateEntity.getLastUpdateDate());
+                    Assertions.assertNotNull(giftCertificateEntity.getPrice());
+                    Assertions.assertNotNull(giftCertificateEntity.getDuration());
+                });
     }
 
     @Test
     public void findGiftById() {
+        Set<TagEntity> tags = new HashSet<>();
+        tags.add(TagEntity.builder()
+                .name("name1")
+                .id(1L).build());
+        tags.add(TagEntity.builder()
+                .name("name2")
+                .id(2L).build());
+
         GiftCertificateEntity expectedEntity = GiftCertificateEntity.builder()
                 .id(1L)
                 .name("name1")
                 .description("description1")
                 .price(10)
-                .duration(10).build();
+                .duration(10)
+                .tags(tags).build();
 
         GiftCertificateEntity actualEntity = giftDao.findGiftById(1L);
 
-        assertEquals(expectedEntity, actualEntity);
+        Assertions.assertEquals(expectedEntity, actualEntity);
     }
 
     @Test
-    public void findAndSortGiftByName(){
+    public void findAndSortGiftByName() {
         String namePrefix = "1";
 
         CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
                 .namePrefix(namePrefix).build();
 
-        List<GiftCertificateEntity> resultList = giftDao.findAndSortGift(customSearchRequest);
+        List<GiftCertificateEntity> resultList = giftDao.findAndSortGifts(customSearchRequest);
 
-        assertNotNull(resultList);
+        Assertions.assertNotNull(resultList);
 
-        for(GiftCertificateEntity giftCertificateEntity : resultList) {
-            assertTrue(giftCertificateEntity.getName().contains(namePrefix));
+        for (GiftCertificateEntity giftCertificateEntity : resultList) {
+            Assertions.assertTrue(giftCertificateEntity.getName().contains(namePrefix));
         }
     }
 
     @Test
-    public void findAndSortGiftByDescription(){
+    public void findAndSortGiftByDescription() {
         String descriptionPrefix = "1";
 
         CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
                 .descriptionPrefix(descriptionPrefix).build();
 
-        List<GiftCertificateEntity> resultList = giftDao.findAndSortGift(customSearchRequest);
+        List<GiftCertificateEntity> resultList = giftDao.findAndSortGifts(customSearchRequest);
 
-        assertNotNull(resultList);
+        Assertions.assertNotNull(resultList);
 
-        for(GiftCertificateEntity giftCertificateEntity : resultList) {
-            assertTrue(giftCertificateEntity.getDescription().contains(descriptionPrefix));
+        for (GiftCertificateEntity giftCertificateEntity : resultList) {
+            Assertions.assertTrue(giftCertificateEntity.getDescription().contains(descriptionPrefix));
         }
     }
 
     @Test
-    public void findAndSortGiftByTagName(){
+    public void findAndSortGiftByTagName() {
         String tagNamePrefix = "name1";
 
         CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
                 .tagNamePrefix(tagNamePrefix).build();
 
-        List<GiftCertificateEntity> resultList = giftDao.findAndSortGift(customSearchRequest);
+        List<GiftCertificateEntity> resultList = giftDao.findAndSortGifts(customSearchRequest);
 
-        assertNotNull(resultList);
+        Assertions.assertNotNull(resultList);
 
-        for(GiftCertificateEntity giftCertificateEntity : resultList) {
+        for (GiftCertificateEntity giftCertificateEntity : resultList) {
             Set<TagEntity> tags = giftCertificateEntity.getTags();
-            assertEquals(2, tags.size());
+            Assertions.assertEquals(2, tags.size());
         }
     }
 
     @Test
-    public void findAndSortGiftByGiftNameAndDescription(){
+    public void findAndSortGiftByGiftNameAndDescription() {
         String namePrefix = "1";
         String descriptionPrefix = "1";
 
@@ -114,14 +132,14 @@ public class GiftDaoImplTest {
                 .namePrefix(namePrefix)
                 .descriptionPrefix(descriptionPrefix).build();
 
-        List<GiftCertificateEntity> resultList = giftDao.findAndSortGift(customSearchRequest);
+        List<GiftCertificateEntity> resultList = giftDao.findAndSortGifts(customSearchRequest);
 
-        assertNotNull(resultList);
-        assertEquals(1, resultList.size());
+        Assertions.assertNotNull(resultList);
+        Assertions.assertEquals(1, resultList.size());
     }
 
     @Test
-    public void findAndSortGiftByGiftNameAndDescriptionAndTagName(){
+    public void findAndSortGiftByGiftNameAndDescriptionAndTagName() {
         String namePrefix = "2";
         String descriptionPrefix = "2";
         String tagNamePrefix = "name3";
@@ -131,25 +149,33 @@ public class GiftDaoImplTest {
                 .descriptionPrefix(descriptionPrefix)
                 .tagNamePrefix(tagNamePrefix).build();
 
-        List<GiftCertificateEntity> resultList = giftDao.findAndSortGift(customSearchRequest);
+        List<GiftCertificateEntity> resultList = giftDao.findAndSortGifts(customSearchRequest);
 
-        assertNotNull(resultList);
-        assertEquals(1, resultList.size());
+        Assertions.assertNotNull(resultList);
+        Assertions.assertEquals(1, resultList.size());
     }
 
     @Test
     public void createGiftWithoutTags() {
+        Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
+
         GiftCertificateEntity entityToSave = GiftCertificateEntity.builder()
                 .name("testName")
                 .description("testDescription")
                 .price(100)
                 .duration(100)
-                .createDate(null)
-                .lastUpdateDate(null).build();
+                .createDate(currentTimestamp)
+                .lastUpdateDate(currentTimestamp).build();
 
         GiftCertificateEntity savedEntity = giftDao.createGift(entityToSave);
-        assertNotNull(savedEntity);
-        assertEquals(6, giftDao.findAllGifts().size());
+        Assertions.assertNotNull(savedEntity);
+        Assertions.assertEquals(6, giftDao.findAllGifts().size());
+        Assertions.assertEquals(entityToSave.getName(), savedEntity.getName());
+        Assertions.assertEquals(entityToSave.getDescription(), savedEntity.getDescription());
+        Assertions.assertEquals(entityToSave.getDuration(), savedEntity.getDuration());
+        Assertions.assertEquals(entityToSave.getPrice(), savedEntity.getPrice());
+        Assertions.assertEquals(entityToSave.getCreateDate(), savedEntity.getCreateDate());
+        Assertions.assertEquals(entityToSave.getLastUpdateDate(), savedEntity.getLastUpdateDate());
     }
 
     @Test
@@ -162,19 +188,19 @@ public class GiftDaoImplTest {
                 .duration(10).build();
 
         GiftCertificateEntity savedEntity = giftDao.updateGift(entityToSave);
-        assertNotNull(savedEntity);
-        assertEquals(20, (int) giftDao.findGiftById(1L).getPrice());
+        Assertions.assertNotNull(savedEntity);
+        Assertions.assertEquals(20, (int) giftDao.findGiftById(1L).getPrice());
     }
 
     @Test
     public void deleteGiftById() {
         giftDao.deleteGiftById(1L);
 
-        assertEquals(4, giftDao.findAllGifts().size());
+        Assertions.assertEquals(4, giftDao.findAllGifts().size());
     }
 
     @Test
-    public void giftNotFoundExceptionCheck(){
-        assertThrows(GiftNotFoundException.class, () -> giftDao.findGiftById(6L));
+    public void giftNotFoundExceptionCheck() {
+        Assertions.assertThrows(GiftNotFoundException.class, () -> giftDao.findGiftById(6L));
     }
 }

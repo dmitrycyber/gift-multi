@@ -6,24 +6,31 @@ import com.epam.esm.service.GiftService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/gifts")
 public class GiftController {
     private final GiftService giftService;
-    private final CustomSearchRequest defaultCustomSearchRequest;
-
+    private final CustomSearchRequest defaultCustomSearchRequest = CustomSearchRequest.builder().build();
 
     @Autowired
     public GiftController(GiftService giftService) {
         this.giftService = giftService;
-        defaultCustomSearchRequest = CustomSearchRequest.builder().build();
     }
-
 
     @GetMapping
     @ApiOperation(value = "Api v1. Get all gifts")
@@ -34,16 +41,17 @@ public class GiftController {
             @ApiParam(name = "sortMethod", value = "Sort methods \"asc\" or \"desc\"") String sortMethod,
             @ApiParam(name = "tagNamePrefix", value = "Search by tag name") String tagNamePrefix
             ) {
-        List<GiftCertificateDto> allGifts;
-
         CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
                 .descriptionPrefix(descriptionPrefix)
                 .namePrefix(namePrefix)
                 .sortField(sortField)
                 .sortMethod(sortMethod)
-                .tagNamePrefix(tagNamePrefix).build();
+                .tagNamePrefix(tagNamePrefix)
+                .build();
 
-        allGifts = !customSearchRequest.equals(defaultCustomSearchRequest) ? giftService.searchGifts(customSearchRequest) : giftService.getAllGifts();
+        List<GiftCertificateDto> allGifts = !customSearchRequest.equals(defaultCustomSearchRequest)
+                ? giftService.searchGifts(customSearchRequest)
+                : giftService.getAllGifts();
 
         return ResponseEntity.ok(allGifts);
     }
@@ -61,7 +69,7 @@ public class GiftController {
     @PostMapping
     @ApiOperation(value = "Api v1. Create gift")
     public ResponseEntity<GiftCertificateDto> createGift(
-            @RequestBody GiftCertificateDto giftCertificateDto
+            @RequestBody @Valid GiftCertificateDto giftCertificateDto
     ) {
         GiftCertificateDto gift = giftService.createGift(giftCertificateDto);
 
@@ -71,8 +79,9 @@ public class GiftController {
     @PutMapping("/{id}")
     @ApiOperation(value = "Api v1. Update gift")
     public ResponseEntity<GiftCertificateDto> updateGift(
-            @RequestBody GiftCertificateDto giftCertificateDto,
-            @PathVariable Long id
+            @PathVariable Long id,
+            @RequestBody @Valid GiftCertificateDto giftCertificateDto
+
 
     ) {
         giftCertificateDto.setId(id);
@@ -89,6 +98,6 @@ public class GiftController {
     ) {
         giftService.deleteGiftById(id);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

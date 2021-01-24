@@ -1,29 +1,25 @@
 package com.epam.esm.service.impl;
 
 import com.epam.esm.dao.TagDao;
-import com.epam.esm.dao.impl.TagDaoImpl;
 import com.epam.esm.model.dto.TagDto;
 import com.epam.esm.model.entity.TagEntity;
-import com.epam.esm.service.TagService;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.ArrayList;
 import java.util.List;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class TagServiceImplTest {
-    private static TagDao tagDao;
-    private static TagService tagService;
+public class TagServiceImplTest {
+    @Mock
+    private TagDao tagDao;
 
-    @BeforeAll
-    static void setup(){
-        tagDao = mock(TagDaoImpl.class);
-        tagService = new TagServiceImpl(tagDao);
-    }
+    @InjectMocks
+    private TagServiceImpl tagService;
 
     @Test
     void getAllTags() {
@@ -38,25 +34,29 @@ class TagServiceImplTest {
                 .id(3L)
                 .name("name3").build());
 
-        when(tagDao.findAllTags()).thenReturn(tagEntityList);
+        Mockito.when(tagDao.findAllTags()).thenReturn(tagEntityList);
         List<TagDto> allTags = tagService.getAllTags();
 
-        assertEquals(3, allTags.size());
-        for(TagDto tagDto : allTags){
-            assertTrue(tagDto.getName().contains("name"));
-        }
+        Assertions.assertEquals(3, allTags.size());
+        allTags
+                .forEach(tagDto -> {
+                    Assertions.assertNotNull(tagDto.getId());
+                    Assertions.assertNotNull(tagDto.getName());
+                    Assertions.assertTrue(tagDto.getName().contains("name"));
+                });
     }
 
     @Test
     void getTagById() {
         long id = 1L;
-        when(tagDao.findTagById(anyLong())).thenReturn(TagEntity.builder()
+        Mockito.when(tagDao.findTagById(Mockito.anyLong())).thenReturn(TagEntity.builder()
                 .id(id)
                 .name("name1").build());
 
         TagDto tagById = tagService.getTagById(id);
 
-        assertEquals("name1", tagById.getName());
+        Assertions.assertNotNull(tagById);
+        Assertions.assertEquals("name1", tagById.getName());
     }
 
     @Test
@@ -66,11 +66,11 @@ class TagServiceImplTest {
                 .id(1L)
                 .name("name1").build());
 
-        when(tagDao.findTagByName(anyString())).thenReturn(tagEntityList);
+        Mockito.when(tagDao.findTagByName(Mockito.anyString())).thenReturn(tagEntityList);
         List<TagDto> allTags = tagService.getTagByName("name1");
 
-        assertEquals(1, allTags.size());
-        assertEquals("name1", allTags.get(0).getName());
+        Assertions.assertEquals(1, allTags.size());
+        Assertions.assertEquals("name1", allTags.get(0).getName());
     }
 
     @Test
@@ -86,13 +86,13 @@ class TagServiceImplTest {
                 .id(3L)
                 .name("name3").build());
 
-        when(tagDao.findTagByPartName(anyString())).thenReturn(tagEntityList);
+        Mockito.when(tagDao.findTagByPartName(Mockito.anyString())).thenReturn(tagEntityList);
         List<TagDto> allTags = tagService.getTagByPartName("name");
 
-        assertEquals(3, allTags.size());
-        assertTrue(allTags.get(0).getName().contains("name"));
-        assertTrue(allTags.get(0).getName().contains("name"));
-        assertTrue(allTags.get(0).getName().contains("name"));
+        Assertions.assertEquals(3, allTags.size());
+        Assertions.assertTrue(allTags.get(0).getName().contains("name"));
+        Assertions.assertTrue(allTags.get(0).getName().contains("name"));
+        Assertions.assertTrue(allTags.get(0).getName().contains("name"));
     }
 
     @Test
@@ -102,22 +102,20 @@ class TagServiceImplTest {
                 .name("name").build();
 
 
-        when(tagDao.createTag(any(TagEntity.class))).thenReturn(tagEntity);
+        Mockito.when(tagDao.createTag(Mockito.any(TagEntity.class))).thenReturn(tagEntity);
 
         TagDto tagDto = tagService.createTag(TagDto.builder()
                 .name("name").build());
 
-        assertEquals(1L, tagDto.getId());
-        assertEquals("name", tagDto.getName());
+        Assertions.assertEquals(1L, tagDto.getId());
+        Assertions.assertEquals("name", tagDto.getName());
 
     }
 
     @Test
     void deleteGift(){
         Long id = 1L;
-
         tagService.deleteTagById(id);
-
-        verify(tagDao, times(1)).deleteTagById(anyLong());
+        Mockito.verify(tagDao, Mockito.times(1)).deleteTagById(Mockito.anyLong());
     }
 }

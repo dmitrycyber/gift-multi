@@ -2,7 +2,6 @@ package com.epam.esm.service;
 
 
 import com.epam.esm.model.dto.TagDto;
-
 import java.util.List;
 
 public interface TagService {
@@ -10,7 +9,6 @@ public interface TagService {
     TagDto getTagById(Long tagId);
     List<TagDto> getTagByName(String tagName);
     List<TagDto> getTagByPartName(String tagName);
-
     TagDto createTag(TagDto tagDto);
     void deleteTagById(Long tagId);
 }

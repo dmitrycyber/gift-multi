@@ -1,26 +1,18 @@
 package com.epam.esm.util;
 
 public enum Status {
-    SUCCESSFUL(200, "Successful"),
-    GIFT_NOT_FOUND(1001, "Gift not found"),
-    TAG_NOT_FOUND(1002, "Tag not found"),
-
-
-    DEFAULT(1099, "Something wrong, try later");
+    GIFT_NOT_FOUND(40401),
+    TAG_NOT_FOUND(40402),
+    VALIDATION_EXCEPTION(40002),
+    DEFAULT(1099);
 
     private Integer code;
-    private String message;
 
-    Status(Integer code, String message) {
+    Status(Integer code) {
         this.code = code;
-        this.message = message;
     }
 
     public Integer getCode() {
         return code;
-    }
-
-    public String getMessage() {
-        return message;
     }
 }

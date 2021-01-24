@@ -2,18 +2,14 @@ package com.epam.esm.dao.impl;
 
 import com.epam.esm.dao.GiftTagDao;
 import com.epam.esm.model.entity.GiftTagEntity;
-import com.epam.esm.model.entity.TagEntity;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
-
 import javax.sql.DataSource;
-
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class GiftTagDaoImplTest {
     private DataSource dataSource;
@@ -34,9 +30,15 @@ class GiftTagDaoImplTest {
 
     @Test
     public void findAllGiftTags() {
-        List<GiftTagEntity> allGiftTagEntity = giftTagDao.findAllGiftTagEntity();
+        List<GiftTagEntity> allGiftTagEntity = giftTagDao.findAllGiftTags();
 
-        assertEquals(5, allGiftTagEntity.size());
+        Assertions.assertEquals(5, allGiftTagEntity.size());
+
+        allGiftTagEntity
+                .forEach(giftTagEntity -> {
+                    Assertions.assertNotNull(giftTagEntity.getGiftId());
+                    Assertions.assertNotNull(giftTagEntity.getTagId());
+                });
     }
 
     @Test
@@ -45,11 +47,11 @@ class GiftTagDaoImplTest {
                 .giftId(1L)
                 .tagId(5L).build();
 
-        giftTagDao.insertNewGiftTagEntity(entityToSave);
+        giftTagDao.saveGiftTag(entityToSave);
 
-        List<GiftTagEntity> allGiftTagEntity = giftTagDao.findAllGiftTagEntity();
+        List<GiftTagEntity> allGiftTagEntity = giftTagDao.findAllGiftTags();
 
-        assertEquals(6, allGiftTagEntity.size());
+        Assertions.assertEquals(6, allGiftTagEntity.size());
     }
 
 }

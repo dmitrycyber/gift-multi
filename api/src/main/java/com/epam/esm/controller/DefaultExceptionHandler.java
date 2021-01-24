@@ -11,69 +11,91 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @ControllerAdvice
-public class ExceptionHandler extends ResponseEntityExceptionHandler {
+public class DefaultExceptionHandler {
     private final ObjectMapper objectMapper;
     private final MessageSource messageSource;
 
+    private static final String SEARCH_ENTITY_ID_REGEX = "^.+/";
+
     @Autowired
-    public ExceptionHandler(ObjectMapper objectMapper, MessageSource messageSource) {
+    public DefaultExceptionHandler(ObjectMapper objectMapper, MessageSource messageSource) {
         this.objectMapper = objectMapper;
         this.messageSource = messageSource;
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(value = {
+    @ExceptionHandler(value = {
             ServiceException.class,
             DaoException.class
     })
-    protected ResponseEntity<Object> handleConflict(RuntimeException ex, WebRequest webRequest) {
+    public ResponseEntity<ErrorResponse<Object>> handleConflict(RuntimeException ex, WebRequest webRequest) {
         String message = messageSource.getMessage(Status.DEFAULT.getCode().toString(), null, webRequest.getLocale());
 
         ErrorResponse<Object> comment = ErrorResponse.builder()
                 .code(Status.DEFAULT.getCode())
                 .comment(message).build();
-        return handleExceptionInternal(ex, comment, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, webRequest);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(comment);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(GiftNotFoundException.class)
+    @ExceptionHandler(GiftNotFoundException.class)
     @SneakyThrows
     public void handleGiftNotFound(HttpServletRequest request, HttpServletResponse response, Exception ex, WebRequest webRequest) {
-        System.out.println("AT URI: " + request.getRequestURI() + " HANDLE EXCEPTION: " + ex);
+        String requestURI = request.getRequestURI();
+        String requestedId = requestURI.replaceAll(SEARCH_ENTITY_ID_REGEX, "");
+
+        System.out.println("AT URI: " + requestURI + " HANDLE EXCEPTION: " + ex);
 
         String message = messageSource.getMessage(Status.GIFT_NOT_FOUND.getCode().toString(), null, webRequest.getLocale());
 
         ErrorResponse<GiftCertificateDto> body = ErrorResponse.<GiftCertificateDto>builder()
                 .code(Status.GIFT_NOT_FOUND.getCode())
-                .comment(message).build();
+                .comment(message + " (id) = " + requestedId).build();
 
         response.setCharacterEncoding("UTF-8");
-        response.setStatus(HttpStatus.INSUFFICIENT_STORAGE.value());
+        response.setStatus(HttpStatus.NOT_FOUND.value());
         response.getWriter().write(objectMapper.writeValueAsString(body));
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(TagNotFoundException.class)
+    @ExceptionHandler(TagNotFoundException.class)
     @SneakyThrows
     public void handleTagNotFound(HttpServletRequest request, HttpServletResponse response, Exception ex, WebRequest webRequest) {
-        System.out.println("AT URI: " + request.getRequestURI() + " HANDLE EXCEPTION: " + ex);
+        String requestURI = request.getRequestURI();
+        String requestedId = requestURI.replaceAll(SEARCH_ENTITY_ID_REGEX, "");
+        System.out.println("AT URI: " + requestURI + " HANDLE EXCEPTION: " + ex);
 
         String message = messageSource.getMessage(Status.TAG_NOT_FOUND.getCode().toString(), null, webRequest.getLocale());
 
         ErrorResponse<GiftCertificateDto> body = ErrorResponse.<GiftCertificateDto>builder()
                 .code(Status.TAG_NOT_FOUND.getCode())
-                .comment(message).build();
+                .comment(message + " (id) = " + requestedId).build();
 
         response.setCharacterEncoding("UTF-8");
-        response.setStatus(HttpStatus.INSUFFICIENT_STORAGE.value());
+        response.setStatus(HttpStatus.NOT_FOUND.value());
         response.getWriter().write(objectMapper.writeValueAsString(body));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<List<ErrorResponse<Object>>> validationErrorHandler(MethodArgumentNotValidException e) {
+        List<ErrorResponse<Object>> collect = e.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(fieldError -> ErrorResponse.builder()
+                        .code(Status.VALIDATION_EXCEPTION.getCode())
+                        .comment(fieldError.getField() + ": " + fieldError.getDefaultMessage()).build())
+                .collect(Collectors.toList());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(collect);
     }
 }
