@@ -5,6 +5,7 @@ import com.epam.esm.dao.GiftTagDao;
 import com.epam.esm.dao.TagDao;
 import com.epam.esm.model.CustomSearchRequest;
 import com.epam.esm.model.dto.GiftCertificateDto;
+import com.epam.esm.model.dto.TagDto;
 import com.epam.esm.model.entity.GiftCertificateEntity;
 import com.epam.esm.model.entity.GiftTagEntity;
 import com.epam.esm.model.entity.TagEntity;
@@ -14,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,7 +36,7 @@ public class GiftServiceImpl implements GiftService {
 
     @Override
     @Transactional
-    public List<GiftCertificateDto> getAllGifts(){
+    public List<GiftCertificateDto> getAllGifts() {
         List<GiftCertificateDto> giftCertificateDtoList = giftDao.findAllGifts().stream()
                 .map(EntityConverter::convertGiftEntityToDto)
                 .collect(Collectors.toList());
@@ -60,19 +63,13 @@ public class GiftServiceImpl implements GiftService {
     public GiftCertificateDto createGift(GiftCertificateDto giftCertificateDto) {
         GiftCertificateEntity giftEntity = giftDao.createGift(EntityConverter.convertGiftDtoToEntity(giftCertificateDto));
 
+
         Set<TagEntity> tags = giftEntity.getTags();
-        if (tags != null){
-            for (TagEntity tag : tags){
 
-                TagEntity tagEntity = tagDao.createTag(tag);
-                tag.setId(tagEntity.getId());
-
-                GiftTagEntity giftTagEntity = GiftTagEntity.builder()
-                        .giftId(giftEntity.getId())
-                        .tagId(tagEntity.getId())
-                        .build();
-
-                giftTagDao.saveGiftTag(giftTagEntity);
+        if (tags != null) {
+            for (TagEntity tag : tags) {
+                TagEntity tagsIfNeeded = createTagsIfNeeded(tag, giftEntity);
+                tag.setId(tagsIfNeeded.getId());
             }
         }
         return EntityConverter.convertGiftEntityToDto(giftEntity);
@@ -81,12 +78,50 @@ public class GiftServiceImpl implements GiftService {
     @Override
     @Transactional
     public GiftCertificateDto updateGift(GiftCertificateDto giftCertificateDto) {
-        GiftCertificateEntity entity = giftDao.updateGift(EntityConverter.convertGiftDtoToEntity(giftCertificateDto));
-        return EntityConverter.convertGiftEntityToDto(entity);
+        Set<TagDto> tagDtoSet = giftCertificateDto.getTags();
+        if (tagDtoSet == null){
+            Set<TagEntity> savedTags = giftDao.findGiftById(giftCertificateDto.getId()).getTags();
+            if (savedTags != null){
+                savedTags.
+                        forEach(tagEntity -> {
+                            deleteGiftById(tagEntity.getId());
+                            giftTagDao.deleteGiftTag(giftCertificateDto.getId(), tagEntity.getId());
+                        });
+            }
+        }
+
+        GiftCertificateEntity giftEntity = giftDao.updateGift(EntityConverter.convertGiftDtoToEntity(giftCertificateDto));
+        Set<TagEntity> tags = giftEntity.getTags();
+
+        if (tags != null) {
+            for (TagEntity tag : tags) {
+                TagEntity tagsIfNeeded = createTagsIfNeeded(tag, giftEntity);
+                tag.setId(tagsIfNeeded.getId());
+            }
+        }
+        return EntityConverter.convertGiftEntityToDto(giftEntity);
     }
 
     @Override
     public void deleteGiftById(Long giftId) {
         giftDao.deleteGiftById(giftId);
+    }
+
+    private TagEntity createTagsIfNeeded(TagEntity tag, GiftCertificateEntity giftEntity) {
+        TagEntity tagEntity;
+        if (tagDao.findTagByName(tag.getName()) == null) {
+            tagEntity = tagDao.createTag(tag);
+            tag.setId(tagEntity.getId());
+
+            GiftTagEntity giftTagEntity = GiftTagEntity.builder()
+                    .giftId(giftEntity.getId())
+                    .tagId(tagEntity.getId())
+                    .build();
+
+            giftTagDao.saveGiftTag(giftTagEntity);
+            return tagEntity;
+        }
+        return tagDao.findTagByName(tag.getName());
+
     }
 }

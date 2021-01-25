@@ -2,6 +2,7 @@ package com.epam.esm.controller;
 
 import com.epam.esm.dao.exception.DaoException;
 import com.epam.esm.dao.exception.GiftNotFoundException;
+import com.epam.esm.dao.exception.TagNameRegisteredException;
 import com.epam.esm.dao.exception.TagNotFoundException;
 import com.epam.esm.model.ErrorResponse;
 import com.epam.esm.model.dto.GiftCertificateDto;
@@ -85,6 +86,24 @@ public class DefaultExceptionHandler {
         response.setStatus(HttpStatus.NOT_FOUND.value());
         response.getWriter().write(objectMapper.writeValueAsString(body));
     }
+
+    @ExceptionHandler(TagNameRegisteredException.class)
+    @SneakyThrows
+    public void handleTagNameRegistered(HttpServletRequest request, HttpServletResponse response, Exception ex, WebRequest webRequest) {
+        System.out.println("AT URI: " + request.getRequestURI() + " HANDLE EXCEPTION: " + ex);
+
+        String message = messageSource.getMessage(Status.TAG_NAME_ALREADY_REGISTERED.getCode().toString(), null, webRequest.getLocale());
+
+        ErrorResponse<GiftCertificateDto> body = ErrorResponse.<GiftCertificateDto>builder()
+                .code(Status.TAG_NAME_ALREADY_REGISTERED.getCode())
+                .comment(message).build();
+
+        response.setCharacterEncoding("UTF-8");
+        response.setStatus(HttpStatus.NOT_FOUND.value());
+        response.getWriter().write(objectMapper.writeValueAsString(body));
+    }
+
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<List<ErrorResponse<Object>>> validationErrorHandler(MethodArgumentNotValidException e) {

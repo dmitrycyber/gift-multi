@@ -163,6 +163,7 @@ public class GiftServiceImplTest {
     @Test
     void updateGift() {
         Mockito.when(giftDao.updateGift(Mockito.any(GiftCertificateEntity.class))).thenReturn(giftCertificateEntity);
+        Mockito.when(giftDao.findGiftById(Mockito.any())).thenReturn(giftCertificateEntity);
 
         GiftCertificateDto giftCertificateDto = giftService.updateGift(GiftCertificateDto.builder()
                 .name("name1")

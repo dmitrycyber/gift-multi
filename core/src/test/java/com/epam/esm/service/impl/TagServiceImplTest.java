@@ -61,16 +61,14 @@ public class TagServiceImplTest {
 
     @Test
     void getTagByName() {
-        List<TagEntity> tagEntityList = new ArrayList<>();
-        tagEntityList.add(TagEntity.builder()
+        TagEntity tagEntity = TagEntity.builder()
                 .id(1L)
-                .name("name1").build());
+                .name("name1").build();
 
-        Mockito.when(tagDao.findTagByName(Mockito.anyString())).thenReturn(tagEntityList);
-        List<TagDto> allTags = tagService.getTagByName("name1");
+        Mockito.when(tagDao.findTagByName(Mockito.anyString())).thenReturn(tagEntity);
+        TagDto tagDto = tagService.getTagByName("name1");
 
-        Assertions.assertEquals(1, allTags.size());
-        Assertions.assertEquals("name1", allTags.get(0).getName());
+        Assertions.assertEquals("name1", tagDto.getName());
     }
 
     @Test

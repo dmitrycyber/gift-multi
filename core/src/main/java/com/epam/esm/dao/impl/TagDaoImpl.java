@@ -38,8 +38,11 @@ public class TagDaoImpl implements TagDao {
     }
 
     @Override
-    public List<TagEntity> findTagByName(String tagName){
-        return jdbcTemplate.query(TagDaoQueries.SELECT_TAGS_BY_NAME, DaoMappers.TAG_ROW_MAPPER, tagName);
+    public TagEntity findTagByName(String tagName){
+        List<TagEntity> query = jdbcTemplate.query(TagDaoQueries.SELECT_TAGS_BY_NAME, DaoMappers.TAG_ROW_MAPPER, tagName);
+        return query.size() == 0
+                ? null
+                : query.get(0);
     }
 
     @Override

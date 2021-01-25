@@ -111,7 +111,6 @@ public class GiftDaoImpl implements GiftDao {
         }
         Set<TagEntity> tags = getTagsByGiftId(giftCertificateEntity.getId());
         giftCertificateEntity.setTags(tags);
-
         giftCertificateEntity.setLastUpdateDate(currentTimestamp);
 
         return giftCertificateEntity;

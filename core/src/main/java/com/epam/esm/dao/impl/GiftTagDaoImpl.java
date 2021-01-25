@@ -25,4 +25,9 @@ public class GiftTagDaoImpl implements GiftTagDao {
     public List<GiftTagEntity> findAllGiftTags() {
         return jdbcTemplate.query(GiftTagDaoQueries.FIND_ALL_GIFT_TAGS, DaoMappers.GIFT_TAG_ROW_MAPPER);
     }
+
+    @Override
+    public void deleteGiftTag(Long giftId, Long tagId) {
+        jdbcTemplate.update(GiftTagDaoQueries.DELETE_GIFT_TAG_BY_TAG_AND_GIFT_ID, giftId, tagId);
+    }
 }

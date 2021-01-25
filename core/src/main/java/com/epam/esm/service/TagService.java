@@ -7,7 +7,7 @@ import java.util.List;
 public interface TagService {
     List<TagDto> getAllTags();
     TagDto getTagById(Long tagId);
-    List<TagDto> getTagByName(String tagName);
+    TagDto getTagByName(String tagName);
     List<TagDto> getTagByPartName(String tagName);
     TagDto createTag(TagDto tagDto);
     void deleteTagById(Long tagId);

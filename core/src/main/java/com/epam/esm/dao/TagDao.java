@@ -25,7 +25,7 @@ public interface TagDao {
      * @param tagName
      * @return List TagEntity which matches the search conditions
      */
-    List<TagEntity> findTagByName(String tagName);
+    TagEntity findTagByName(String tagName);
 
     /**
      * Find tags by full part tag name

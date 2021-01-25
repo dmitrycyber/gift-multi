@@ -56,18 +56,17 @@ public class TagDaoImplTest {
     public void successfulFindTagByName() {
         String expectedName = "name1";
 
-        List<TagEntity> tagByName = tagDao.findTagByName(expectedName);
-        int size = tagByName.size();
-        Assertions.assertEquals(1, size);
-        Assertions.assertEquals(expectedName, tagByName.get(0).getName());
+        TagEntity tagByName = tagDao.findTagByName(expectedName);
+
+        Assertions.assertEquals(expectedName, tagByName.getName());
     }
 
     @Test
     public void negativeFindTagByName() {
         String expectedName = "name12";
-        List<TagEntity> tagByName = tagDao.findTagByName(expectedName);
-        int size = tagByName.size();
-        Assertions.assertEquals(0, size);
+        TagEntity tagByName = tagDao.findTagByName(expectedName);
+        Assertions.assertNull(tagByName);
+
     }
 
 

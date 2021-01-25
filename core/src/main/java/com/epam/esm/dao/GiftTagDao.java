@@ -16,4 +16,6 @@ public interface GiftTagDao {
      * @return List GiftTagEntity
      */
     List<GiftTagEntity> findAllGiftTags();
+
+    void deleteGiftTag(Long giftId, Long tagId);
 }

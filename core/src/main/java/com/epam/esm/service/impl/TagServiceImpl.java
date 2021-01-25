@@ -1,6 +1,7 @@
 package com.epam.esm.service.impl;
 
 import com.epam.esm.dao.TagDao;
+import com.epam.esm.dao.exception.TagNameRegisteredException;
 import com.epam.esm.model.dto.TagDto;
 import com.epam.esm.model.entity.TagEntity;
 import com.epam.esm.service.TagService;
@@ -38,12 +39,10 @@ public class TagServiceImpl implements TagService {
 
     @Override
     @Transactional
-    public List<TagDto> getTagByName(String tagName) {
-        List<TagEntity> tagByName = tagDao.findTagByName(tagName);
+    public TagDto getTagByName(String tagName) {
+        TagEntity tagByName = tagDao.findTagByName(tagName);
 
-        return tagByName.stream()
-                .map(EntityConverter::convertTagEntityToDto)
-                .collect(Collectors.toList());
+        return EntityConverter.convertTagEntityToDto(tagByName);
     }
 
     @Override
@@ -61,10 +60,10 @@ public class TagServiceImpl implements TagService {
     public TagDto createTag(TagDto tagDto){
         TagEntity tagEntity = EntityConverter.convertTagDtoToEntity(tagDto);
 
-        List<TagEntity> tagByPartName = tagDao.findTagByName(tagEntity.getName());
+        TagEntity tagByName = tagDao.findTagByName(tagEntity.getName());
 
-        if (!tagByPartName.isEmpty()) {
-            return EntityConverter.convertTagEntityToDto(tagByPartName.get(0));
+        if (tagByName != null) {
+            throw new TagNameRegisteredException();
         }
         return EntityConverter.convertTagEntityToDto(tagDao.createTag(tagEntity));
     }
