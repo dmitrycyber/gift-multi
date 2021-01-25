@@ -1,4 +1,4 @@
-rootProject.name = 'GiftCertificatesSystem'
+rootProject.name = 'gift-multi'
 
 include 'core'
 include 'api'

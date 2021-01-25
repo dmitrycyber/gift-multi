@@ -34,7 +34,8 @@ public class TagServiceImpl implements TagService {
     @Override
     @Transactional
     public TagDto getTagById(Long tagId) {
-        return EntityConverter.convertTagEntityToDto(tagDao.findTagById(tagId));
+        TagEntity tagById = tagDao.findTagById(tagId);
+        return EntityConverter.convertTagEntityToDto(tagById);
     }
 
     @Override
@@ -65,7 +66,8 @@ public class TagServiceImpl implements TagService {
         if (tagByName != null) {
             throw new TagNameRegisteredException();
         }
-        return EntityConverter.convertTagEntityToDto(tagDao.createTag(tagEntity));
+        TagEntity tag = tagDao.createTag(tagEntity);
+        return EntityConverter.convertTagEntityToDto(tag);
     }
 
     @Override

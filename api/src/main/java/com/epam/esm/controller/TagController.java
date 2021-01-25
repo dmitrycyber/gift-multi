@@ -62,7 +62,7 @@ public class TagController {
 
     @DeleteMapping("/{id}")
     @ApiOperation(value = "Api v1. Delete tag by id")
-    public ResponseEntity<ErrorResponse> deleteTag(
+    public ResponseEntity deleteTag(
             @PathVariable Long id
     ) {
         tagService.deleteTagById(id);
