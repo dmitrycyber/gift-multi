@@ -14,8 +14,6 @@ import com.epam.esm.util.converter.EntityConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.validation.constraints.Null;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,7 +25,7 @@ public class GiftServiceImpl implements GiftService {
     private final GiftTagDao giftTagDao;
 
     @Autowired
-    public GiftServiceImpl(GiftDao giftDao,TagDao tagDao, GiftTagDao giftTagDao) {
+    public GiftServiceImpl(GiftDao giftDao, TagDao tagDao, GiftTagDao giftTagDao) {
         this.giftDao = giftDao;
         this.tagDao = tagDao;
         this.giftTagDao = giftTagDao;
@@ -64,7 +62,6 @@ public class GiftServiceImpl implements GiftService {
         GiftCertificateEntity giftCertificateEntity = EntityConverter.convertGiftDtoToEntity(giftCertificateDto);
         GiftCertificateEntity giftEntity = giftDao.createGift(giftCertificateEntity);
 
-
         Set<TagEntity> tags = giftEntity.getTags();
 
         if (tags != null) {
@@ -79,11 +76,13 @@ public class GiftServiceImpl implements GiftService {
     @Override
     @Transactional
     public GiftCertificateDto updateGift(GiftCertificateDto giftCertificateDto) {
-        Set<TagDto> tagDtoSet = giftCertificateDto.getTags();
-        if (tagDtoSet == null){
-            Long id = giftCertificateDto.getId();
+        GiftCertificateDto dtoToSave = defineDtoToSave(giftCertificateDto);
+
+        Set<TagDto> tagDtoSet = dtoToSave.getTags();
+        if (tagDtoSet == null) {
+            Long id = dtoToSave.getId();
             Set<TagEntity> savedTags = giftDao.findGiftById(id).getTags();
-            if (savedTags != null){
+            if (savedTags != null) {
                 savedTags.
                         forEach(tagEntity -> {
                             deleteGiftById(tagEntity.getId());
@@ -92,16 +91,46 @@ public class GiftServiceImpl implements GiftService {
             }
         }
 
-        GiftCertificateEntity giftEntity = giftDao.updateGift(EntityConverter.convertGiftDtoToEntity(giftCertificateDto));
-        Set<TagEntity> tags = giftEntity.getTags();
+        GiftCertificateEntity giftCertificateEntity = EntityConverter.convertGiftDtoToEntity(dtoToSave);
 
-        if (tags != null) {
-            for (TagEntity tag : tags) {
-                TagEntity tagsIfNeeded = createTagsIfNeeded(tag, giftEntity);
-                tag.setId(tagsIfNeeded.getId());
-            }
+
+        Set<TagEntity> tags = giftCertificateEntity.getTags();
+        GiftCertificateEntity giftEntity = giftDao.updateGift(giftCertificateEntity);
+
+
+        for (TagEntity tag : tags) {
+            TagEntity tagsIfNeeded = createTagsIfNeeded(tag, giftEntity);
+            tag.setId(tagsIfNeeded.getId());
         }
+
         return EntityConverter.convertGiftEntityToDto(giftEntity);
+    }
+
+    private GiftCertificateDto defineDtoToSave(GiftCertificateDto giftCertificateDto) {
+        String name = giftCertificateDto.getName();
+        String description = giftCertificateDto.getDescription();
+        Integer duration = giftCertificateDto.getDuration();
+        Integer price = giftCertificateDto.getPrice();
+        Set<TagDto> tags = giftCertificateDto.getTags();
+
+        GiftCertificateDto giftById = getGiftById(giftCertificateDto.getId());
+
+        if (name != null) {
+            giftById.setName(name);
+        }
+        if (description != null) {
+            giftById.setDescription(description);
+        }
+        if (duration != null) {
+            giftById.setDuration(duration);
+        }
+        if (price != null) {
+            giftById.setPrice(price);
+        }
+        if (tags != null) {
+            giftById.setTags(tags);
+        }
+        return giftById;
     }
 
     @Override
