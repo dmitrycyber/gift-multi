@@ -5,7 +5,6 @@ import com.epam.esm.dao.GiftTagDao;
 import com.epam.esm.dao.TagDao;
 import com.epam.esm.model.CustomSearchRequest;
 import com.epam.esm.model.dto.GiftCertificateDto;
-import com.epam.esm.model.dto.TagDto;
 import com.epam.esm.model.entity.GiftCertificateEntity;
 import com.epam.esm.model.entity.GiftTagEntity;
 import com.epam.esm.model.entity.TagEntity;
@@ -14,6 +13,8 @@ import com.epam.esm.util.converter.EntityConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -61,14 +62,11 @@ public class GiftServiceImpl implements GiftService {
     public GiftCertificateDto createGift(GiftCertificateDto giftCertificateDto) {
         GiftCertificateEntity giftCertificateEntity = EntityConverter.convertGiftDtoToEntity(giftCertificateDto);
         GiftCertificateEntity giftEntity = giftDao.createGift(giftCertificateEntity);
-
         Set<TagEntity> tags = giftEntity.getTags();
 
-        if (tags != null) {
-            for (TagEntity tag : tags) {
-                TagEntity tagsIfNeeded = createTagsIfNeeded(tag, giftEntity);
-                tag.setId(tagsIfNeeded.getId());
-            }
+        for (TagEntity tag : tags) {
+            TagEntity tagsIfNeeded = createTagsIfNeeded(tag, giftEntity);
+            tag.setId(tagsIfNeeded.getId());
         }
         return EntityConverter.convertGiftEntityToDto(giftEntity);
     }
@@ -76,61 +74,16 @@ public class GiftServiceImpl implements GiftService {
     @Override
     @Transactional
     public GiftCertificateDto updateGift(GiftCertificateDto giftCertificateDto) {
-        GiftCertificateDto dtoToSave = defineDtoToSave(giftCertificateDto);
+        GiftCertificateEntity giftEntityToSave = EntityConverter.convertGiftDtoToEntity(giftCertificateDto);
 
-        Set<TagDto> tagDtoSet = dtoToSave.getTags();
-        if (tagDtoSet == null) {
-            Long id = dtoToSave.getId();
-            Set<TagEntity> savedTags = giftDao.findGiftById(id).getTags();
-            if (savedTags != null) {
-                savedTags.
-                        forEach(tagEntity -> {
-                            deleteGiftById(tagEntity.getId());
-                            giftTagDao.deleteGiftTag(id, tagEntity.getId());
-                        });
-            }
+        GiftCertificateEntity savedGiftEntity = giftDao.updateGift(giftEntityToSave);
+
+        Set<TagEntity> tagsToSave = giftEntityToSave.getTags();
+        if (tagsToSave != null){
+            Set<TagEntity> tagEntities = updateGiftTags(savedGiftEntity.getTags(), tagsToSave, giftEntityToSave);
+            savedGiftEntity.setTags(tagEntities);
         }
-
-        GiftCertificateEntity giftCertificateEntity = EntityConverter.convertGiftDtoToEntity(dtoToSave);
-
-
-        Set<TagEntity> tags = giftCertificateEntity.getTags();
-        GiftCertificateEntity giftEntity = giftDao.updateGift(giftCertificateEntity);
-
-
-        for (TagEntity tag : tags) {
-            TagEntity tagsIfNeeded = createTagsIfNeeded(tag, giftEntity);
-            tag.setId(tagsIfNeeded.getId());
-        }
-
-        return EntityConverter.convertGiftEntityToDto(giftEntity);
-    }
-
-    private GiftCertificateDto defineDtoToSave(GiftCertificateDto giftCertificateDto) {
-        String name = giftCertificateDto.getName();
-        String description = giftCertificateDto.getDescription();
-        Integer duration = giftCertificateDto.getDuration();
-        Integer price = giftCertificateDto.getPrice();
-        Set<TagDto> tags = giftCertificateDto.getTags();
-
-        GiftCertificateDto giftById = getGiftById(giftCertificateDto.getId());
-
-        if (name != null) {
-            giftById.setName(name);
-        }
-        if (description != null) {
-            giftById.setDescription(description);
-        }
-        if (duration != null) {
-            giftById.setDuration(duration);
-        }
-        if (price != null) {
-            giftById.setPrice(price);
-        }
-        if (tags != null) {
-            giftById.setTags(tags);
-        }
-        return giftById;
+        return EntityConverter.convertGiftEntityToDto(savedGiftEntity);
     }
 
     @Override
@@ -138,21 +91,76 @@ public class GiftServiceImpl implements GiftService {
         giftDao.deleteGiftById(giftId);
     }
 
-    private TagEntity createTagsIfNeeded(TagEntity tag, GiftCertificateEntity giftEntity) {
-        TagEntity tagEntity;
-        if (tagDao.findTagByName(tag.getName()) == null) {
-            tagEntity = tagDao.createTag(tag);
-            tag.setId(tagEntity.getId());
-
-            GiftTagEntity giftTagEntity = GiftTagEntity.builder()
-                    .giftId(giftEntity.getId())
-                    .tagId(tagEntity.getId())
-                    .build();
-
-            giftTagDao.saveGiftTag(giftTagEntity);
-            return tagEntity;
+    private Set<TagEntity> updateGiftTags(Set<TagEntity> savedTags, Set<TagEntity> tagsToSave, GiftCertificateEntity giftCertificateEntity) {
+        if (tagsToSave.isEmpty()) {
+            return deleteAllGiftTags(savedTags, tagsToSave, giftCertificateEntity);
         }
-        return tagDao.findTagByName(tag.getName());
 
+        Set<String> savedTagNames = savedTags == null
+                ? new HashSet<>()
+                : savedTags.stream()
+                .map(TagEntity::getName)
+                .collect(Collectors.toSet());
+        Set<String> tagNamesToSave = tagsToSave.stream()
+                .map(TagEntity::getName)
+                .collect(Collectors.toSet());
+
+        if (savedTags != null) {
+            deleteGiftTagsIfNeeded(savedTags, giftCertificateEntity, tagNamesToSave);
+        }
+        addTagsIfNeeded(tagsToSave, giftCertificateEntity, savedTagNames);
+        return tagsToSave;
     }
+
+    private Set<TagEntity> deleteAllGiftTags(Set<TagEntity> savedTags, Set<TagEntity> tagsToSave, GiftCertificateEntity giftCertificateEntity) {
+        Long id = giftCertificateEntity.getId();
+        if (savedTags != null) {
+            savedTags.
+                    forEach(tagEntity -> {
+                        deleteGiftById(tagEntity.getId());
+                        giftTagDao.deleteGiftTag(id, tagEntity.getId());
+                    });
+        }
+        return tagsToSave;
+    }
+
+    private void addTagsIfNeeded(Set<TagEntity> tagsToSave, GiftCertificateEntity giftCertificateEntity, Set<String> savedTagNames) {
+        for (TagEntity tagEntity : tagsToSave) {
+            if (savedTagNames.contains(tagEntity.getName())) {
+                TagEntity tagByName = tagDao.findTagByName(tagEntity.getName());
+                tagEntity.setId(tagByName.getId());
+            } else {
+                TagEntity tagsIfNeeded = createTagsIfNeeded(tagEntity, giftCertificateEntity);
+                tagEntity.setId(tagsIfNeeded.getId());
+            }
+        }
+    }
+
+    private void deleteGiftTagsIfNeeded(Set<TagEntity> savedTags, GiftCertificateEntity giftCertificateEntity, Set<String> tagNamesToSave) {
+        for (TagEntity tagEntity : savedTags) {
+            if (!tagNamesToSave.contains(tagEntity.getName())) {
+                giftTagDao.deleteGiftTag(giftCertificateEntity.getId(), tagEntity.getId());
+            }
+        }
+    }
+
+    private TagEntity createTagsIfNeeded(TagEntity tag, GiftCertificateEntity giftEntity) {
+        TagEntity savedTag = tagDao.findTagByName(tag.getName());
+        if (savedTag == null) {
+            savedTag = tagDao.createTag(tag);
+        }
+        createGiftTag(giftEntity, savedTag);
+
+        return savedTag;
+    }
+
+    private void createGiftTag(GiftCertificateEntity giftEntity, TagEntity savedTag) {
+        GiftTagEntity giftTagEntity = GiftTagEntity.builder()
+                .giftId(giftEntity.getId())
+                .tagId(savedTag.getId())
+                .build();
+        giftTagDao.saveGiftTag(giftTagEntity);
+    }
+
+
 }

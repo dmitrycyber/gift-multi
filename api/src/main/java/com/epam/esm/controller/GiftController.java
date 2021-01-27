@@ -1,6 +1,7 @@
 package com.epam.esm.controller;
 
 import com.epam.esm.model.CustomSearchRequest;
+import com.epam.esm.model.dto.CreatingDto;
 import com.epam.esm.model.dto.GiftCertificateDto;
 import com.epam.esm.service.GiftService;
 import io.swagger.annotations.ApiOperation;
@@ -62,7 +63,9 @@ public class GiftController {
     @PostMapping
     @ApiOperation(value = "Api v1. Create gift")
     public ResponseEntity<GiftCertificateDto> createGift(
-            @RequestBody @Valid GiftCertificateDto giftCertificateDto
+            @RequestBody
+            @Validated(CreatingDto.class)
+            @Valid GiftCertificateDto giftCertificateDto
     ) {
         GiftCertificateDto gift = giftService.createGift(giftCertificateDto);
 

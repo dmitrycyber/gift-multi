@@ -3,14 +3,16 @@ package com.epam.esm.dao.impl;
 public class GiftDaoQueries {
     static final String FIND_ALL_GIFTS = "select * from gift_certificate";
     static final String FIND_ALL_GIFTS_TEST = "select gc.id, gc.name, gc.description, gc.price, gc.duration, gc.create_date, gc.last_update_date, t.id as tag_id, t.name as tag_name " +
-        "from gift_certificate gc " +
-        "full join gift_tags gt on gc.id = gt.gift_id " +
-        "full join tag t on gt.tag_id=t.id";
+            "from gift_certificate gc " +
+            "full join gift_tags gt on gc.id = gt.gift_id " +
+            "full join tag t on gt.tag_id=t.id";
 
     static final String FIND_GIFT_BY_ID = "select * from gift_certificate where id = ?";
     static final String FIND_GIFT_BY_ID_TEST = FIND_ALL_GIFTS_TEST + " where gc.id = ?";
 
-
+    static final String PARTIAL_UPDATE_GIFT = "UPDATE table_name " +
+            "SET column1 = value1, column2 = value2 " +
+            "WHERE condition;";
 
 
     static final String BY_NAME = " where name like ?";

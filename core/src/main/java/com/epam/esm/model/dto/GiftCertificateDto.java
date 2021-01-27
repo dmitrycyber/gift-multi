@@ -20,18 +20,18 @@ public class GiftCertificateDto implements Serializable {
     private Long id;
 
     @Size(min = 2, max = 45)
-    @NotNull
+    @NotNull(groups = {CreatingDto.class})
     private String name;
 
     @Size(min = 3, max = 255)
     private String description;
 
     @Min(value = 1)
-    @NotNull
+    @NotNull(groups = {CreatingDto.class})
     private Integer price;
 
     @Min(value = 1)
-    @NotNull
+    @NotNull(groups = {CreatingDto.class})
     private Integer duration;
 
     @Null

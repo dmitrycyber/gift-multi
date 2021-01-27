@@ -12,9 +12,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -56,7 +56,7 @@ public class GiftDaoImpl implements GiftDao {
 
     @Override
     public List<GiftCertificateEntity> findAndSortGifts(CustomSearchRequest customSearchRequest) {
-        QueryArgModel queryArgModel = defineQueryAndArgs(customSearchRequest);
+        QueryArgModel queryArgModel = defineSearchQueryAndArgs(customSearchRequest);
         String queryString = queryArgModel.getQuery();
         Object[] args = queryArgModel.getArgs();
 
@@ -98,23 +98,54 @@ public class GiftDaoImpl implements GiftDao {
 
     @Override
     public GiftCertificateEntity updateGift(GiftCertificateEntity giftCertificateEntity) {
-        Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
-        int rows = jdbcTemplate.update(GiftDaoQueries.UPDATE_BY_ID_QUERY,
-                giftCertificateEntity.getName(),
-                giftCertificateEntity.getDescription(),
-                giftCertificateEntity.getPrice(),
-                giftCertificateEntity.getDuration(),
-                currentTimestamp,
-                giftCertificateEntity.getId());
+        QueryArgModel queryArgModel = defineUpdateQueryAndArgs(giftCertificateEntity);
+        String queryString = queryArgModel.getQuery();
+        Object[] args = queryArgModel.getArgs();
 
-        if (rows == 0) {
-            throw new GiftNotFoundException();
+        jdbcTemplate.update(queryString, args);
+
+        return findGiftById(giftCertificateEntity.getId());
+    }
+
+    private QueryArgModel defineUpdateQueryAndArgs(GiftCertificateEntity giftCertificateEntity){
+        String name = giftCertificateEntity.getName();
+        String description = giftCertificateEntity.getDescription();
+        Integer duration = giftCertificateEntity.getDuration();
+        Integer price = giftCertificateEntity.getPrice();
+        Long id = giftCertificateEntity.getId();
+        List<Object> argList = new ArrayList<>();
+
+        StringBuilder updateGift = new StringBuilder("UPDATE gift_certificate SET ");
+        String nameValueRegex = "=?, ";
+        String whereConditionId = "WHERE id=?;";
+
+        argList.add(new Timestamp(System.currentTimeMillis()));
+        updateGift.append(GiftDaoQueries.COLUMN_LAST_UPDATE_DATE).append(nameValueRegex);
+        if (name != null){
+            argList.add(name);
+            updateGift.append(GiftDaoQueries.COLUMN_NAME).append(nameValueRegex);
         }
-        Set<TagEntity> tags = getTagsByGiftId(giftCertificateEntity.getId());
-        giftCertificateEntity.setTags(tags);
-        giftCertificateEntity.setLastUpdateDate(currentTimestamp);
+        if (description != null){
+            argList.add(description);
+            updateGift.append(GiftDaoQueries.COLUMN_DESCRIPTION).append(nameValueRegex);
+        }
+        if (price != null){
+            argList.add(price);
+            updateGift.append(GiftDaoQueries.COLUMN_PRICE).append(nameValueRegex);
+        }
+        if (duration != null){
+            argList.add(duration);
+            updateGift.append(GiftDaoQueries.COLUMN_DURATION).append(nameValueRegex);
+        }
+        updateGift.append(whereConditionId);
+        argList.add(id);
+        Object[] argArray = argList.toArray();
 
-        return giftCertificateEntity;
+        String query = updateGift.toString().replaceAll(", WHERE", " WHERE");
+        return QueryArgModel.builder()
+                .query(query)
+                .args(argArray)
+                .build();
     }
 
     @Override
@@ -128,14 +159,13 @@ public class GiftDaoImpl implements GiftDao {
         return new HashSet<>(queryTags);
     }
 
-    private QueryArgModel defineQueryAndArgs(CustomSearchRequest customSearchRequest) {
+    private QueryArgModel defineSearchQueryAndArgs(CustomSearchRequest customSearchRequest) {
         String namePrefix = customSearchRequest.getNamePrefix();
         String descriptionPrefix = customSearchRequest.getDescriptionPrefix();
         String tagNamePrefix = customSearchRequest.getTagNamePrefix();
         String sortField = customSearchRequest.getSortField();
         String sortMethod = customSearchRequest.getSortMethod();
         Object[] args = new Object[0];
-
 
         String namePrefixWithWildCard = GiftDaoQueries.ZERO_OR_MORE_ELEMENTS_WILDCARD + namePrefix + GiftDaoQueries.ZERO_OR_MORE_ELEMENTS_WILDCARD;
         String descriptionPrefixWithWildCard = GiftDaoQueries.ZERO_OR_MORE_ELEMENTS_WILDCARD + descriptionPrefix + GiftDaoQueries.ZERO_OR_MORE_ELEMENTS_WILDCARD;
