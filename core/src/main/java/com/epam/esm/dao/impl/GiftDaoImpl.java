@@ -12,6 +12,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -58,6 +59,7 @@ public class GiftDaoImpl implements GiftDao {
     public List<GiftCertificateEntity> findAndSortGifts(CustomSearchRequest customSearchRequest) {
         QueryArgModel queryArgModel = defineSearchQueryAndArgs(customSearchRequest);
         String queryString = queryArgModel.getQuery();
+
         Object[] args = queryArgModel.getArgs();
 
         List<GiftCertificateEntity> query = jdbcTemplate.query(queryString, DaoMappers.GIFT_ROW_MAPPER, args);
@@ -107,7 +109,7 @@ public class GiftDaoImpl implements GiftDao {
         return findGiftById(giftCertificateEntity.getId());
     }
 
-    private QueryArgModel defineUpdateQueryAndArgs(GiftCertificateEntity giftCertificateEntity){
+    private QueryArgModel defineUpdateQueryAndArgs(GiftCertificateEntity giftCertificateEntity) {
         String name = giftCertificateEntity.getName();
         String description = giftCertificateEntity.getDescription();
         Integer duration = giftCertificateEntity.getDuration();
@@ -121,19 +123,19 @@ public class GiftDaoImpl implements GiftDao {
 
         argList.add(new Timestamp(System.currentTimeMillis()));
         updateGift.append(GiftDaoQueries.COLUMN_LAST_UPDATE_DATE).append(nameValueRegex);
-        if (name != null){
+        if (name != null) {
             argList.add(name);
             updateGift.append(GiftDaoQueries.COLUMN_NAME).append(nameValueRegex);
         }
-        if (description != null){
+        if (description != null) {
             argList.add(description);
             updateGift.append(GiftDaoQueries.COLUMN_DESCRIPTION).append(nameValueRegex);
         }
-        if (price != null){
+        if (price != null) {
             argList.add(price);
             updateGift.append(GiftDaoQueries.COLUMN_PRICE).append(nameValueRegex);
         }
-        if (duration != null){
+        if (duration != null) {
             argList.add(duration);
             updateGift.append(GiftDaoQueries.COLUMN_DURATION).append(nameValueRegex);
         }
@@ -165,76 +167,135 @@ public class GiftDaoImpl implements GiftDao {
         String tagNamePrefix = customSearchRequest.getTagNamePrefix();
         String sortField = customSearchRequest.getSortField();
         String sortMethod = customSearchRequest.getSortMethod();
-        Object[] args = new Object[0];
+
+        StringBuilder queryBuilder = new StringBuilder(GiftDaoQueries.FIND_ALL_GIFTS);
+        String propertiesRegex = " and ";
+        String likeRegex = " like ? ";
+        String tagTableName = "t.";
+        String giftTableName = "gc.";
+        String orderRegex = " order by ";
+        String ascOrder = " asc";
+        String descOrder = " desc";
+        List<Object> argList = new ArrayList<>();
 
         String namePrefixWithWildCard = GiftDaoQueries.ZERO_OR_MORE_ELEMENTS_WILDCARD + namePrefix + GiftDaoQueries.ZERO_OR_MORE_ELEMENTS_WILDCARD;
         String descriptionPrefixWithWildCard = GiftDaoQueries.ZERO_OR_MORE_ELEMENTS_WILDCARD + descriptionPrefix + GiftDaoQueries.ZERO_OR_MORE_ELEMENTS_WILDCARD;
         String tagNamePrefixWithWildCard = GiftDaoQueries.ZERO_OR_MORE_ELEMENTS_WILDCARD + tagNamePrefix + GiftDaoQueries.ZERO_OR_MORE_ELEMENTS_WILDCARD;
 
-        StringBuilder query = new StringBuilder();
-
         if (namePrefix != null && descriptionPrefix == null && tagNamePrefix == null) {
-            query.append(GiftDaoQueries.SELECT_GIFT_BY_NAME);
-            args = new Object[1];
-            args[0] = namePrefixWithWildCard;
+            argList.add(namePrefixWithWildCard);
+            queryBuilder
+                    .append(propertiesRegex)
+                    .append(giftTableName)
+                    .append(GiftDaoQueries.COLUMN_NAME)
+                    .append(likeRegex);
         }
         if (namePrefix == null && descriptionPrefix != null && tagNamePrefix == null) {
-            query.append(GiftDaoQueries.SELECT_GIFT_BY_DESCRIPTION);
-            args = new Object[1];
-            args[0] = descriptionPrefixWithWildCard;
+            argList.add(descriptionPrefixWithWildCard);
+            queryBuilder
+                    .append(propertiesRegex)
+                    .append(giftTableName)
+                    .append(GiftDaoQueries.COLUMN_DESCRIPTION)
+                    .append(likeRegex);
         }
         if (namePrefix == null && descriptionPrefix == null && tagNamePrefix != null) {
-            query.append(GiftDaoQueries.SELECT_GIFT_BY_TAG_NAME);
-            args = new Object[1];
-            args[0] = tagNamePrefixWithWildCard;
+            argList.add(tagNamePrefixWithWildCard);
+            queryBuilder
+                    .append(propertiesRegex)
+                    .append(tagTableName)
+                    .append(TagDaoQueries.COLUMN_NAME)
+                    .append(likeRegex);
         }
         if (namePrefix != null && descriptionPrefix != null && tagNamePrefix == null) {
-            query.append(GiftDaoQueries.SELECT_GIFT_BY_NAME_AND_DESCRIPTION);
-            args = new Object[2];
-            args[0] = namePrefixWithWildCard;
-            args[1] = descriptionPrefixWithWildCard;
+            argList.add(namePrefixWithWildCard);
+            argList.add(descriptionPrefixWithWildCard);
+            queryBuilder
+                    .append(propertiesRegex)
+                    .append(giftTableName)
+                    .append(GiftDaoQueries.COLUMN_NAME)
+                    .append(likeRegex)
+                    .append(propertiesRegex)
+                    .append(giftTableName)
+                    .append(GiftDaoQueries.COLUMN_DESCRIPTION)
+                    .append(likeRegex);
         }
         if (namePrefix == null && descriptionPrefix != null && tagNamePrefix != null) {
-            query.append(GiftDaoQueries.SELECT_GIFT_BY_TAG_NAME_AND_GIFT_DESCRIPTION);
-            args = new Object[2];
-            args[0] = descriptionPrefixWithWildCard;
-            args[1] = tagNamePrefixWithWildCard;
+            argList.add(descriptionPrefixWithWildCard);
+            argList.add(tagNamePrefixWithWildCard);
+            queryBuilder
+                    .append(propertiesRegex)
+                    .append(giftTableName)
+                    .append(GiftDaoQueries.COLUMN_DESCRIPTION)
+                    .append(likeRegex)
+                    .append(propertiesRegex)
+                    .append(tagTableName)
+                    .append(TagDaoQueries.COLUMN_NAME)
+                    .append(likeRegex);
         }
         if (namePrefix != null && descriptionPrefix == null && tagNamePrefix != null) {
-            query.append(GiftDaoQueries.SELECT_GIFT_BY_TAG_NAME_AND_GIFT_NAME);
-            args = new Object[2];
-            args[0] = namePrefixWithWildCard;
-            args[1] = tagNamePrefixWithWildCard;
+            argList.add(namePrefixWithWildCard);
+            argList.add(tagNamePrefixWithWildCard);
+            queryBuilder
+                    .append(propertiesRegex)
+                    .append(giftTableName)
+                    .append(GiftDaoQueries.COLUMN_NAME)
+                    .append(likeRegex)
+                    .append(propertiesRegex)
+                    .append(tagTableName)
+                    .append(TagDaoQueries.COLUMN_NAME)
+                    .append(likeRegex);
         }
         if (namePrefix != null && descriptionPrefix != null && tagNamePrefix != null) {
-            query.append(GiftDaoQueries.SELECT_GIFT_BY_TAG_NAME_AND_GIFT_NAME_AND_DESCRIPTION);
-            args = new Object[3];
-            args[0] = namePrefixWithWildCard;
-            args[1] = descriptionPrefixWithWildCard;
-            args[2] = tagNamePrefixWithWildCard;
+            argList.add(namePrefixWithWildCard);
+            argList.add(descriptionPrefixWithWildCard);
+            argList.add(tagNamePrefixWithWildCard);
+            queryBuilder
+                    .append(propertiesRegex)
+                    .append(giftTableName)
+                    .append(GiftDaoQueries.COLUMN_NAME)
+                    .append(likeRegex)
+                    .append(propertiesRegex)
+                    .append(giftTableName)
+                    .append(GiftDaoQueries.COLUMN_DESCRIPTION)
+                    .append(likeRegex)
+                    .append(propertiesRegex)
+                    .append(tagTableName)
+                    .append(TagDaoQueries.COLUMN_NAME)
+                    .append(likeRegex);
         }
 
         if (sortField != null && sortMethod != null) {
             if (sortField.equals(SearchConstants.NAME_FIELD)) {
                 if (sortMethod.equals(SearchConstants.ASC_METHOD_SORT)) {
-                    query.append(GiftDaoQueries.SORT_BY_NAME_ASC);
+                    queryBuilder
+                            .append(orderRegex)
+                            .append(GiftDaoQueries.COLUMN_NAME)
+                            .append(ascOrder);
                 }
                 if (sortMethod.equals(SearchConstants.DESC_METHOD_SORT)) {
-                    query.append(GiftDaoQueries.SORT_BY_NAME_DESC);
+                    queryBuilder
+                            .append(orderRegex)
+                            .append(GiftDaoQueries.COLUMN_NAME)
+                            .append(descOrder);
                 }
             }
             if (sortField.equals(SearchConstants.DATE_FIELD)) {
                 if (sortMethod.equals(SearchConstants.ASC_METHOD_SORT)) {
-                    query.append(GiftDaoQueries.SORT_BY_CREATE_DATE_ASC);
+                    queryBuilder
+                            .append(orderRegex)
+                            .append(GiftDaoQueries.COLUMN_CREATE_DATE)
+                            .append(ascOrder);
                 }
                 if (sortMethod.equals(SearchConstants.DESC_METHOD_SORT)) {
-                    query.append(GiftDaoQueries.SORT_BY_CREATE_DATE_DESC);
+                    queryBuilder
+                            .append(orderRegex)
+                            .append(GiftDaoQueries.COLUMN_CREATE_DATE)
+                            .append(descOrder);
                 }
             }
         }
         return QueryArgModel.builder()
-                .query(query.toString())
-                .args(args).build();
+                .query(queryBuilder.toString())
+                .args(argList.toArray()).build();
     }
-
 }

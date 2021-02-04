@@ -2,6 +2,7 @@ package com.epam.esm.dao.impl;
 
 public class TagDaoQueries {
     static final String COLUMN_ID = "id";
+    static final String COLUMN_NAME = "name";
     static final int ZERO_INDEX = 0;
     static final String FIND_ALL_TAGS = "select * from tag";
     static final String FIND_TAG_BY_ID = "select * from tag where id = ?";

@@ -17,6 +17,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,6 +28,7 @@ import java.util.Set;
 import java.util.stream.LongStream;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class GiftServiceImplTest {
     @Mock
     private static GiftDao giftDao;
@@ -46,6 +50,16 @@ public class GiftServiceImplTest {
         currentTimestamp = new Timestamp(System.currentTimeMillis());
         giftCertificateEntityList = new ArrayList<>();
 
+        Set<TagEntity> tags = new HashSet<>();
+
+        LongStream.range(1, 5)
+                .forEach(index -> {
+                    tags.add(TagEntity.builder()
+                            .id(index)
+                            .name("name" + index)
+                            .build());
+                });
+
         LongStream.range(1, 6)
                 .forEach(index -> {
                     giftCertificateEntityList.add(GiftCertificateEntity.builder()
@@ -55,17 +69,11 @@ public class GiftServiceImplTest {
                             .price((int) index)
                             .duration((int) index)
                             .createDate(currentTimestamp)
-                            .lastUpdateDate(currentTimestamp).build());
+                            .lastUpdateDate(currentTimestamp)
+                            .tags(tags).build());
                 });
         giftCertificateEntity = giftCertificateEntityList.get(0);
 
-        Set<TagEntity> tags = new HashSet<>();
-        tags.add(TagEntity.builder()
-                .name("name1")
-                .id(1L).build());
-        tags.add(TagEntity.builder()
-                .name("name2")
-                .id(2L).build());
         searchGiftCertificateEntityList = new ArrayList<>();
         searchGiftCertificateEntityList.add(GiftCertificateEntity.builder()
                 .id(1L)
@@ -143,15 +151,15 @@ public class GiftServiceImplTest {
 
     @Test
     void createGift() {
-        System.out.println(giftCertificateEntity);
-
         Mockito.when(giftDao.createGift(Mockito.any(GiftCertificateEntity.class))).thenReturn(giftCertificateEntity);
+        Mockito.when(tagDao.createTag(Mockito.any(TagEntity.class))).thenReturn(TagEntity.builder().build());
 
         GiftCertificateDto giftCertificateDto = giftService.createGift(GiftCertificateDto.builder()
                 .name("name1")
                 .description("description1")
                 .price(1)
-                .duration(1).build());
+                .duration(1)
+                .build());
 
         Assertions.assertEquals(1L, giftCertificateDto.getId());
         Assertions.assertEquals("name1", giftCertificateDto.getName());
@@ -160,19 +168,19 @@ public class GiftServiceImplTest {
         Assertions.assertEquals(1, giftCertificateDto.getDuration());
     }
 
-//    @Test
-//    void updateGift() {
-//        Mockito.when(giftDao.updateGift(Mockito.any(GiftCertificateEntity.class))).thenReturn(giftCertificateEntity);
-//        Mockito.when(giftDao.findGiftById(Mockito.any())).thenReturn(giftCertificateEntity);
-//
-//        GiftCertificateDto giftCertificateDto = giftService.updateGift(GiftCertificateDto.builder()
-//                .name("name1")
-//                .description("description1")
-//                .price(1)
-//                .duration(1).build());
-//
-//        Assertions.assertEquals("description1", giftCertificateDto.getDescription());
-//    }
+    @Test
+    void updateGift() {
+        Mockito.when(giftDao.updateGift(Mockito.any(GiftCertificateEntity.class))).thenReturn(giftCertificateEntity);
+        Mockito.when(giftDao.findGiftById(Mockito.any())).thenReturn(giftCertificateEntity);
+
+        GiftCertificateDto giftCertificateDto = giftService.updateGift(GiftCertificateDto.builder()
+                .name("name1")
+                .description("description1")
+                .price(1)
+                .duration(1).build());
+
+        Assertions.assertEquals("description1", giftCertificateDto.getDescription());
+    }
 
     @Test
     void deleteGift() {

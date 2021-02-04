@@ -10,6 +10,7 @@ import com.epam.esm.service.exception.ServiceException;
 import com.epam.esm.util.Status;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
+@Slf4j
 public class DefaultExceptionHandler {
     private final ObjectMapper objectMapper;
     private final MessageSource messageSource;
@@ -40,73 +42,43 @@ public class DefaultExceptionHandler {
             ServiceException.class,
             DaoException.class
     })
-    public ResponseEntity<ErrorResponse<Object>> handleConflict(RuntimeException ex, WebRequest webRequest) {
+    public ResponseEntity<ErrorResponse> handleConflict(RuntimeException ex, WebRequest webRequest, HttpServletRequest request ) {
         String message = messageSource.getMessage(Status.DEFAULT.getCode().toString(), null, webRequest.getLocale());
 
-        ErrorResponse<Object> comment = ErrorResponse.builder()
-                .code(Status.DEFAULT.getCode())
-                .comment(message).build();
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(comment);
+        return getErrorResponseResponseEntity(request, ex, webRequest, Status.DEFAULT, HttpStatus.INTERNAL_SERVER_ERROR, message);
     }
 
     @ExceptionHandler(GiftNotFoundException.class)
     @SneakyThrows
-    public void handleGiftNotFound(HttpServletRequest request, HttpServletResponse response, Exception ex, WebRequest webRequest) {
-        String requestURI = request.getRequestURI();
-        String requestedId = requestURI.replaceAll(SEARCH_ENTITY_ID_REGEX, "");
-
-        System.out.println("AT URI: " + requestURI + " HANDLE EXCEPTION: " + ex);
-
+    public ResponseEntity<ErrorResponse> handleGiftNotFound(HttpServletRequest request, HttpServletResponse response, Exception ex, WebRequest webRequest) {
         String message = messageSource.getMessage(Status.GIFT_NOT_FOUND.getCode().toString(), null, webRequest.getLocale());
 
-        ErrorResponse<GiftCertificateDto> body = ErrorResponse.<GiftCertificateDto>builder()
-                .code(Status.GIFT_NOT_FOUND.getCode())
-                .comment(message + " (id) = " + requestedId).build();
+        String resultMessage = errorMessageNotFoundById(request, message);
 
-        response.setCharacterEncoding("UTF-8");
-        response.setStatus(HttpStatus.NOT_FOUND.value());
-        response.getWriter().write(objectMapper.writeValueAsString(body));
+        return getErrorResponseResponseEntity(request, ex, webRequest, Status.GIFT_NOT_FOUND, HttpStatus.NOT_FOUND, resultMessage);
     }
 
     @ExceptionHandler(TagNotFoundException.class)
     @SneakyThrows
-    public void handleTagNotFound(HttpServletRequest request, HttpServletResponse response, Exception ex, WebRequest webRequest) {
-        String requestURI = request.getRequestURI();
-        String requestedId = requestURI.replaceAll(SEARCH_ENTITY_ID_REGEX, "");
-        System.out.println("AT URI: " + requestURI + " HANDLE EXCEPTION: " + ex);
-
+    public ResponseEntity<ErrorResponse> handleTagNotFound(HttpServletRequest request, HttpServletResponse response, Exception ex, WebRequest webRequest) {
         String message = messageSource.getMessage(Status.TAG_NOT_FOUND.getCode().toString(), null, webRequest.getLocale());
 
-        ErrorResponse<GiftCertificateDto> body = ErrorResponse.<GiftCertificateDto>builder()
-                .code(Status.TAG_NOT_FOUND.getCode())
-                .comment(message + " (id) = " + requestedId).build();
+        String resultMessage = errorMessageNotFoundById(request, message);
 
-        response.setCharacterEncoding("UTF-8");
-        response.setStatus(HttpStatus.NOT_FOUND.value());
-        response.getWriter().write(objectMapper.writeValueAsString(body));
+        return getErrorResponseResponseEntity(request, ex, webRequest, Status.TAG_NOT_FOUND, HttpStatus.NOT_FOUND, resultMessage);
     }
 
     @ExceptionHandler(TagNameRegisteredException.class)
     @SneakyThrows
-    public void handleTagNameRegistered(HttpServletRequest request, HttpServletResponse response, Exception ex, WebRequest webRequest) {
-        System.out.println("AT URI: " + request.getRequestURI() + " HANDLE EXCEPTION: " + ex);
-
+    public ResponseEntity<ErrorResponse> handleTagNameRegistered(HttpServletRequest request, HttpServletResponse response, Exception ex, WebRequest webRequest) {
         String message = messageSource.getMessage(Status.TAG_NAME_ALREADY_REGISTERED.getCode().toString(), null, webRequest.getLocale());
 
-        ErrorResponse<GiftCertificateDto> body = ErrorResponse.<GiftCertificateDto>builder()
-                .code(Status.TAG_NAME_ALREADY_REGISTERED.getCode())
-                .comment(message).build();
-
-        response.setCharacterEncoding("UTF-8");
-        response.setStatus(HttpStatus.NOT_FOUND.value());
-        response.getWriter().write(objectMapper.writeValueAsString(body));
+        return getErrorResponseResponseEntity(request, ex, webRequest, Status.TAG_NAME_ALREADY_REGISTERED, HttpStatus.NOT_FOUND, message);
     }
 
-
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<List<ErrorResponse<Object>>> validationErrorHandler(MethodArgumentNotValidException e) {
-        List<ErrorResponse<Object>> collect = e.getBindingResult()
+    public ResponseEntity<List<ErrorResponse>> validationErrorHandler(MethodArgumentNotValidException e) {
+        List<ErrorResponse> collect = e.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(fieldError -> ErrorResponse.builder()
@@ -115,5 +87,22 @@ public class DefaultExceptionHandler {
                 .collect(Collectors.toList());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(collect);
+    }
+
+
+    private ResponseEntity<ErrorResponse> getErrorResponseResponseEntity(HttpServletRequest request, Exception ex, WebRequest webRequest, Status status, HttpStatus httpStatus, String message) {
+        log.error("AT URI: " + request.getRequestURI() + " HANDLE EXCEPTION: " + ex);
+
+        ErrorResponse body = ErrorResponse.builder()
+                .code(status.getCode())
+                .comment(message).build();
+
+        return ResponseEntity.status(httpStatus).body(body);
+    }
+
+    private String errorMessageNotFoundById(HttpServletRequest request, String message) {
+        String requestURI = request.getRequestURI();
+        String requestedId = requestURI.replaceAll(SEARCH_ENTITY_ID_REGEX, "");
+        return message + " (id) = " + requestedId;
     }
 }
