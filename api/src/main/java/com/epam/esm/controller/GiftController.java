@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
 import javax.validation.Valid;
 import java.util.List;
 
@@ -33,7 +34,7 @@ public class GiftController {
             @ApiParam(name = "sortField", value = "Sort by fields \"name\" or \"date\"") String sortField,
             @ApiParam(name = "sortMethod", value = "Sort methods \"asc\" or \"desc\"") String sortMethod,
             @ApiParam(name = "tagNamePrefix", value = "Search by tag name") String tagNamePrefix
-            ) {
+    ) {
         CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
                 .descriptionPrefix(descriptionPrefix)
                 .namePrefix(namePrefix)
@@ -63,8 +64,9 @@ public class GiftController {
     @ApiOperation(value = "Api v1. Create gift")
     public ResponseEntity<GiftCertificateDto> createGift(
             @RequestBody
+            @Valid
             @Validated(CreatingDto.class)
-            @Valid GiftCertificateDto giftCertificateDto
+            GiftCertificateDto giftCertificateDto
     ) {
         GiftCertificateDto gift = giftService.createGift(giftCertificateDto);
 
@@ -75,7 +77,9 @@ public class GiftController {
     @ApiOperation(value = "Api v1. Update gift")
     public ResponseEntity<GiftCertificateDto> updateGift(
             @PathVariable Long id,
-            @RequestBody @Valid GiftCertificateDto giftCertificateDto
+            @RequestBody
+            @Valid
+            GiftCertificateDto giftCertificateDto
     ) {
         giftCertificateDto.setId(id);
 

@@ -9,8 +9,7 @@ import java.io.Serializable;
 @Data
 @Builder
 @AllArgsConstructor
-public class ErrorResponse<T> implements Serializable {
-    private T message;
+public class ErrorResponse implements Serializable {
     private String comment;
     private int code;
 }
