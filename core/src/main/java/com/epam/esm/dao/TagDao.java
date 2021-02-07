@@ -47,6 +47,4 @@ public interface TagDao {
      * @throws com.epam.esm.dao.exception.TagNotFoundException if fount no tags
      */
     void deleteTagById(Long tagId);
-
-
 }

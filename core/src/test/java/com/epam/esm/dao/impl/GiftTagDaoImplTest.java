@@ -54,5 +54,4 @@ class GiftTagDaoImplTest {
 
         Assertions.assertEquals(6, allGiftTagEntity.size());
     }
-
 }

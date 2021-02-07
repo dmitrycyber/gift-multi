@@ -160,6 +160,4 @@ public class GiftServiceImpl implements GiftService {
                 .build();
         giftTagDao.saveGiftTag(giftTagEntity);
     }
-
-
 }
