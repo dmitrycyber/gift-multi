@@ -56,10 +56,12 @@ public class GiftDaoImplTest {
         Set<TagEntity> tags = new HashSet<>();
         tags.add(TagEntity.builder()
                 .name("name1")
-                .id(1L).build());
+                .id(1L)
+                .build());
         tags.add(TagEntity.builder()
                 .name("name2")
-                .id(2L).build());
+                .id(2L)
+                .build());
 
         GiftCertificateEntity expectedEntity = GiftCertificateEntity.builder()
                 .id(1L)
@@ -67,7 +69,8 @@ public class GiftDaoImplTest {
                 .description("description1")
                 .price(10)
                 .duration(10)
-                .tags(tags).build();
+                .tags(tags)
+                .build();
 
         GiftCertificateEntity actualEntity = giftDao.findGiftById(1L);
 
@@ -79,7 +82,8 @@ public class GiftDaoImplTest {
         String namePrefix = "1";
 
         CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
-                .namePrefix(namePrefix).build();
+                .namePrefix(namePrefix)
+                .build();
 
         List<GiftCertificateEntity> resultList = giftDao.findAndSortGifts(customSearchRequest);
 
@@ -95,7 +99,8 @@ public class GiftDaoImplTest {
         String descriptionPrefix = "1";
 
         CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
-                .descriptionPrefix(descriptionPrefix).build();
+                .descriptionPrefix(descriptionPrefix)
+                .build();
 
         List<GiftCertificateEntity> resultList = giftDao.findAndSortGifts(customSearchRequest);
 
@@ -111,7 +116,8 @@ public class GiftDaoImplTest {
         String tagNamePrefix = "name1";
 
         CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
-                .tagNamePrefix(tagNamePrefix).build();
+                .tagNamePrefix(tagNamePrefix)
+                .build();
 
         List<GiftCertificateEntity> resultList = giftDao.findAndSortGifts(customSearchRequest);
 
@@ -130,7 +136,8 @@ public class GiftDaoImplTest {
 
         CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
                 .namePrefix(namePrefix)
-                .descriptionPrefix(descriptionPrefix).build();
+                .descriptionPrefix(descriptionPrefix)
+                .build();
 
         List<GiftCertificateEntity> resultList = giftDao.findAndSortGifts(customSearchRequest);
 
@@ -147,7 +154,8 @@ public class GiftDaoImplTest {
         CustomSearchRequest customSearchRequest = CustomSearchRequest.builder()
                 .namePrefix(namePrefix)
                 .descriptionPrefix(descriptionPrefix)
-                .tagNamePrefix(tagNamePrefix).build();
+                .tagNamePrefix(tagNamePrefix)
+                .build();
 
         List<GiftCertificateEntity> resultList = giftDao.findAndSortGifts(customSearchRequest);
 
@@ -165,7 +173,8 @@ public class GiftDaoImplTest {
                 .price(100)
                 .duration(100)
                 .createDate(currentTimestamp)
-                .lastUpdateDate(currentTimestamp).build();
+                .lastUpdateDate(currentTimestamp)
+                .build();
 
         GiftCertificateEntity savedEntity = giftDao.createGift(entityToSave);
         Assertions.assertNotNull(savedEntity);
@@ -185,7 +194,8 @@ public class GiftDaoImplTest {
                 .name("name1")
                 .description("description1")
                 .price(20)
-                .duration(10).build();
+                .duration(10)
+                .build();
 
         GiftCertificateEntity savedEntity = giftDao.updateGift(entityToSave);
         Assertions.assertNotNull(savedEntity);

@@ -1,3 +1,8 @@
+plugins {
+    id 'java'
+    id 'war'
+}
+
 group 'com.epam.esm'
 version '1.0'
 

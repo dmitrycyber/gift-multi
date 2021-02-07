@@ -1,5 +1,4 @@
 plugins {
-    id 'java'
     id 'war'
 }
 
@@ -30,15 +29,8 @@ dependencies {
     annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
     providedCompile group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
 
-    testCompile group: 'org.springframework', name: 'spring-test', version: springVersion
-    testCompile group: 'com.h2database', name: 'h2', version: '1.4.200'
-    testCompile group: 'org.mockito', name: 'mockito-core', version: '3.6.28'
-    testCompile group: 'org.mockito', name: 'mockito-junit-jupiter', version: '3.6.0'
-
-
-
-
-
-
-
+    testImplementation group: 'org.springframework', name: 'spring-test', version: springVersion
+    testImplementation group: 'com.h2database', name: 'h2', version: '1.4.200'
+    testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.28'
+    testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '3.6.0'
 }

@@ -70,7 +70,8 @@ public class GiftServiceImplTest {
                             .duration((int) index)
                             .createDate(currentTimestamp)
                             .lastUpdateDate(currentTimestamp)
-                            .tags(tags).build());
+                            .tags(tags)
+                            .build());
                 });
         giftCertificateEntity = giftCertificateEntityList.get(0);
 
@@ -83,7 +84,8 @@ public class GiftServiceImplTest {
                 .duration(1)
                 .createDate(currentTimestamp)
                 .lastUpdateDate(currentTimestamp)
-                .tags(tags).build());
+                .tags(tags)
+                .build());
 
 
     }
@@ -137,7 +139,8 @@ public class GiftServiceImplTest {
                 .namePrefix(expectedName)
                 .descriptionPrefix(expectedDescription)
                 .sortField(SearchConstants.NAME_FIELD)
-                .sortMethod(SearchConstants.DESC_METHOD_SORT).build();
+                .sortMethod(SearchConstants.DESC_METHOD_SORT)
+                .build();
 
         List<GiftCertificateDto> giftCertificateDtoList = giftService.searchGifts(customSearchRequest);
         GiftCertificateDto giftCertificateDto = giftCertificateDtoList.get(0);
@@ -152,7 +155,8 @@ public class GiftServiceImplTest {
     @Test
     void createGift() {
         Mockito.when(giftDao.createGift(Mockito.any(GiftCertificateEntity.class))).thenReturn(giftCertificateEntity);
-        Mockito.when(tagDao.createTag(Mockito.any(TagEntity.class))).thenReturn(TagEntity.builder().build());
+        Mockito.when(tagDao.createTag(Mockito.any(TagEntity.class))).thenReturn(TagEntity.builder()
+                .build());
 
         GiftCertificateDto giftCertificateDto = giftService.createGift(GiftCertificateDto.builder()
                 .name("name1")
@@ -177,7 +181,8 @@ public class GiftServiceImplTest {
                 .name("name1")
                 .description("description1")
                 .price(1)
-                .duration(1).build());
+                .duration(1)
+                .build());
 
         Assertions.assertEquals("description1", giftCertificateDto.getDescription());
     }

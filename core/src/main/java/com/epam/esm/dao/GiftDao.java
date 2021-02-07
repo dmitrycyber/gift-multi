@@ -5,8 +5,6 @@ import com.epam.esm.model.entity.GiftCertificateEntity;
 import java.util.List;
 
 public interface GiftDao {
-
-
     /**
      * Find all gift certificates
      * @return List GiftCertificateEntity

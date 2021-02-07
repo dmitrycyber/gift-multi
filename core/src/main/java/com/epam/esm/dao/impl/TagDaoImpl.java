@@ -22,23 +22,23 @@ public class TagDaoImpl implements TagDao {
 
 
     @Override
-    public List<TagEntity> findAllTags(){
+    public List<TagEntity> findAllTags() {
         return jdbcTemplate.query(TagDaoQueries.FIND_ALL_TAGS, DaoMappers.TAG_ROW_MAPPER);
     }
 
     @Override
-    public TagEntity findTagById(Long tagId){
+    public TagEntity findTagById(Long tagId) {
         List<TagEntity> query = jdbcTemplate.query(TagDaoQueries.FIND_TAG_BY_ID, DaoMappers.TAG_ROW_MAPPER, tagId);
 
         if (query.size() != TagDaoQueries.DEFAULT_TAG_LIST_SIZE) {
-            throw new TagNotFoundException();
+            throw new TagNotFoundException(tagId.toString());
         }
 
         return query.get(TagDaoQueries.ZERO_ELEMENT_INDEX);
     }
 
     @Override
-    public TagEntity findTagByName(String tagName){
+    public TagEntity findTagByName(String tagName) {
         List<TagEntity> query = jdbcTemplate.query(TagDaoQueries.SELECT_TAGS_BY_NAME, DaoMappers.TAG_ROW_MAPPER, tagName);
         return query.size() == 0
                 ? null
@@ -46,14 +46,14 @@ public class TagDaoImpl implements TagDao {
     }
 
     @Override
-    public List<TagEntity> findTagByPartName(String tagName){
+    public List<TagEntity> findTagByPartName(String tagName) {
         return jdbcTemplate.query(TagDaoQueries.SELECT_TAGS_BY_PART_NAME,
                 DaoMappers.TAG_ROW_MAPPER,
                 TagDaoQueries.ZERO_OR_MORE_ELEMENTS_WILDCARD + tagName + TagDaoQueries.ZERO_OR_MORE_ELEMENTS_WILDCARD);
     }
 
     @Override
-    public TagEntity createTag(TagEntity tagEntity){
+    public TagEntity createTag(TagEntity tagEntity) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(
                 connection -> {
@@ -63,8 +63,6 @@ public class TagDaoImpl implements TagDao {
                     return ps;
                 },
                 keyHolder);
-
-
         Long tagId = (Long) keyHolder.getKey();
 
         tagEntity.setId(tagId);
@@ -73,7 +71,7 @@ public class TagDaoImpl implements TagDao {
     }
 
     @Override
-    public void deleteTagById(Long tagId){
+    public void deleteTagById(Long tagId) {
         jdbcTemplate.update(TagDaoQueries.DELETE_TAG_BY_ID, tagId);
     }
 }

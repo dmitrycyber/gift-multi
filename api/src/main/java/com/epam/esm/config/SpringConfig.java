@@ -2,15 +2,11 @@ package com.epam.esm.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.hibernate.validator.messageinterpolation.ResourceBundleMessageInterpolator;
-import org.junit.jupiter.api.BeforeEach;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -18,8 +14,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.context.support.ResourceBundleMessageSource;
-import org.springframework.http.MediaType;
-import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.TransactionManager;
@@ -40,33 +34,6 @@ import java.util.Locale;
         "classpath:application.properties"})
 @EnableTransactionManagement
 public class SpringConfig implements WebMvcConfigurer {
-    private final ApplicationContext applicationContext;
-
-    @Value("${application.gifts.datasource.jdbcUrl}")
-    private String jdbcUrl;
-
-    @Value("${application.gifts.datasource.driverClassName}")
-    private String driverClassName;
-
-    @Value("${application.gifts.datasource.name}")
-    private String username;
-
-    @Value("${application.gifts.datasource.password}")
-    private String password;
-
-    @Value("${application.gifts.datasource.minimumIdle}")
-    private Integer minimumIdle;
-
-    @Value("${application.gifts.datasource.maximumPoolSize}")
-    private Integer maximumPoolSize;
-
-    @Value("${message-source.basename}")
-    private String messageSourceBaseName;
-
-    @Autowired
-    public SpringConfig(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
 
     @Bean
     public ObjectMapper objectMapper() {
@@ -77,7 +44,14 @@ public class SpringConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    public DataSource dataSource() {
+    public DataSource dataSource(
+            @Value("${application.gifts.datasource.jdbcUrl}") String jdbcUrl,
+            @Value("${application.gifts.datasource.driverClassName}") String driverClassName,
+            @Value("${application.gifts.datasource.name}") String username,
+            @Value("${application.gifts.datasource.password}") String password,
+            @Value("${application.gifts.datasource.minimumIdle}") Integer minimumIdle,
+            @Value("${application.gifts.datasource.maximumPoolSize}") Integer maximumPoolSize
+            ) {
         HikariConfig config = new HikariConfig();
         config.setDriverClassName(driverClassName);
         config.setJdbcUrl(jdbcUrl);
@@ -89,12 +63,12 @@ public class SpringConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    public JdbcTemplate jdbcTemplate() {
-        return new JdbcTemplate(dataSource());
+    public JdbcTemplate jdbcTemplate(DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
     }
 
     @Bean
-    public MessageSource messageSource() {
+    public MessageSource messageSource(@Value("${message-source.basename}") String messageSourceBaseName) {
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
         messageSource.setBasename(messageSourceBaseName);
         messageSource.setDefaultEncoding(StandardCharsets.UTF_8.name());
@@ -109,27 +83,24 @@ public class SpringConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    public TransactionManager transactionManager() {
-        return new DataSourceTransactionManager(dataSource());
+    public TransactionManager transactionManager(DataSource dataSource) {
+        return new DataSourceTransactionManager(dataSource);
     }
 
     @Bean
-    public MessageSourceResourceBundleLocator resourceBundle() {
-        return new MessageSourceResourceBundleLocator(messageSource());
+    public MessageSourceResourceBundleLocator resourceBundle(MessageSource messageSource) {
+        return new MessageSourceResourceBundleLocator(messageSource);
     }
 
     @Bean
-    public ResourceBundleMessageInterpolator interpolator() {
-        return new ResourceBundleMessageInterpolator(resourceBundle());
+    public ResourceBundleMessageInterpolator interpolator(MessageSourceResourceBundleLocator resourceBundle) {
+        return new ResourceBundleMessageInterpolator(resourceBundle);
     }
 
     @Bean
-    public LocalValidatorFactoryBean validator() {
+    public LocalValidatorFactoryBean validator(ResourceBundleMessageInterpolator interpolator) {
         LocalValidatorFactoryBean bean = new LocalValidatorFactoryBean();
-        bean.setMessageInterpolator(interpolator());
+        bean.setMessageInterpolator(interpolator);
         return bean;
     }
-
-
-
 }

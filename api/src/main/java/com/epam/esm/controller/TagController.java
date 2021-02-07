@@ -63,6 +63,7 @@ public class TagController {
             @PathVariable Long id
     ) {
         tagService.deleteTagById(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                .build();
     }
 }

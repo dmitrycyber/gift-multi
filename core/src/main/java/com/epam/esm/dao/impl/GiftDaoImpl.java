@@ -12,7 +12,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -45,7 +44,7 @@ public class GiftDaoImpl implements GiftDao {
         List<GiftCertificateEntity> query = jdbcTemplate.query(GiftDaoQueries.FIND_GIFT_BY_ID, DaoMappers.GIFT_ROW_MAPPER, giftId);
 
         if (query.size() != 1) {
-            throw new GiftNotFoundException();
+            throw new GiftNotFoundException(giftId.toString());
         }
 
         GiftCertificateEntity giftCertificateEntity = query.get(0);
@@ -296,6 +295,7 @@ public class GiftDaoImpl implements GiftDao {
         }
         return QueryArgModel.builder()
                 .query(queryBuilder.toString())
-                .args(argList.toArray()).build();
+                .args(argList.toArray())
+                .build();
     }
 }

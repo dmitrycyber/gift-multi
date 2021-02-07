@@ -1,6 +1,5 @@
 package com.epam.esm.service;
 
-
 import com.epam.esm.model.CustomSearchRequest;
 import com.epam.esm.model.dto.GiftCertificateDto;
 import java.util.List;

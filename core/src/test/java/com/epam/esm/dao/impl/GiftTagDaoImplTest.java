@@ -45,7 +45,8 @@ class GiftTagDaoImplTest {
     public void testCreateGiftTag() {
         GiftTagEntity entityToSave = GiftTagEntity.builder()
                 .giftId(1L)
-                .tagId(5L).build();
+                .tagId(5L)
+                .build();
 
         giftTagDao.saveGiftTag(entityToSave);
 

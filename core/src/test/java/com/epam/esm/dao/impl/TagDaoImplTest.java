@@ -45,7 +45,8 @@ public class TagDaoImplTest {
     public void testFindTagById() {
         TagEntity expectedEntity = TagEntity.builder()
                 .id(1L)
-                .name("name1").build();
+                .name("name1")
+                .build();
 
         TagEntity actualEntity = tagDao.findTagById(1L);
 
@@ -98,7 +99,8 @@ public class TagDaoImplTest {
         String createdTagName = "testName";
 
         TagEntity entityToSave = TagEntity.builder()
-                .name(createdTagName).build();
+                .name(createdTagName)
+                .build();
 
         TagEntity savedEntity = tagDao.createTag(entityToSave);
         Assertions.assertNotNull(savedEntity);
@@ -116,7 +118,7 @@ public class TagDaoImplTest {
     }
 
     @Test
-    public void giftNotFoundExceptionCheck(){
+    public void giftNotFoundExceptionCheck() {
         Assertions.assertThrows(TagNotFoundException.class, () -> tagDao.findTagById(6L));
     }
 }

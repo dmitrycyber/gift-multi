@@ -107,7 +107,6 @@ public class TagServiceImplTest {
 
         Assertions.assertEquals(1L, tagDto.getId());
         Assertions.assertEquals("name", tagDto.getName());
-
     }
 
     @Test
