@@ -1,0 +1,4 @@
+rootProject.name = 'gift-multi'
+
+include 'core'
+include 'api'
